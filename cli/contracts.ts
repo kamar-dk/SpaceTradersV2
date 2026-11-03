@@ -1,5 +1,5 @@
 import * as contracts from "../core/contracts.ts";
-import type { Contract } from "../core/types.ts";
+import type { Contract, TradeSymbol } from "../core/types.ts";
 
 function printContract(c: Contract): void {
     const status = c.fulfilled ? "FULFILLED" : c.accepted ? "ACCEPTED" : "OFFERED";
@@ -27,5 +27,21 @@ export const contractCommands = {
         const contract = await contracts.negotiate(ship);
         console.log("New contract:");
         printContract(contract);
+    },
+    async deliver([contractId, ship, tradeSymbol, units]: string[]) {
+        const result = await contracts.deliver(
+            contractId,
+            ship,
+            tradeSymbol as TradeSymbol,
+            units ? Number(units) : undefined,
+        );
+        if (!result) return console.log(`No ${tradeSymbol} in cargo`);
+
+        console.log(`Delivered ${result.units} ${tradeSymbol}`);
+        printContract(result.contract);
+    },
+    async fulfill([contractId]: string[]) {
+        const { agent } = await contracts.fulfill(contractId);
+        console.log(`Contract fulfilled! Credits: ${agent.credits}`);
     },
 }
