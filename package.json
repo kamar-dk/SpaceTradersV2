@@ -1,5 +1,6 @@
 {
-  "name": "spacetraders",
+  "name": "spacetradersv2",
+  "version": "1.0.0",
   "type": "module",
   "bin": {
     "st": "./index.ts"

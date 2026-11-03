@@ -7,11 +7,13 @@ import { contractCommands } from "./cli/contracts.ts";
 import { systemCommands } from "./cli/systems.ts";
 import { navigationCommands } from "./cli/navigation.ts";
 import { cargoCommands } from "./cli/cargo.ts";
+import { marketCommands } from "./cli/market.ts";
 
 const groups: Record<string, CommandGroup> = {
     Ship: shipCommands,
     System: systemCommands,
     Navigation: navigationCommands,
+    Market: marketCommands,
     Contracts: contractCommands,
     Cargo: cargoCommands,
     Misc: miscCommands,
