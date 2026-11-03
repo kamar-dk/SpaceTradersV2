@@ -6,10 +6,12 @@ import { shipCommands } from "./cli/ships.ts";
 import { expandShip } from "./utils.ts";
 import { contractCommands } from "./cli/contracts.ts";
 import { systemCommands } from "./cli/systems.ts";
+import { navigationCommands } from "./cli/navigation.ts";
 
 const groups: Record<string, CommandGroup> = {
     Ship: shipCommands,
     System: systemCommands,
+    Navigation: navigationCommands,
     Contracts: contractCommands,
     Misc: miscCommands,
 }
