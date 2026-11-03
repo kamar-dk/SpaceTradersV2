@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { api } from "./core/api.ts";
 import { miscCommands } from "./cli/misc.ts";
 import type { CommandGroup } from "./cli/command.ts";
 import { shipCommands } from "./cli/ships.ts";
@@ -7,12 +6,14 @@ import { expandShip } from "./utils.ts";
 import { contractCommands } from "./cli/contracts.ts";
 import { systemCommands } from "./cli/systems.ts";
 import { navigationCommands } from "./cli/navigation.ts";
+import { cargoCommands } from "./cli/cargo.ts";
 
 const groups: Record<string, CommandGroup> = {
     Ship: shipCommands,
     System: systemCommands,
     Navigation: navigationCommands,
     Contracts: contractCommands,
+    Cargo: cargoCommands,
     Misc: miscCommands,
 }
 
