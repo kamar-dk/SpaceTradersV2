@@ -1,0 +1,14 @@
+{
+  "name": "spacetraders",
+  "type": "module",
+  "bin": {
+    "st": "./index.ts"
+  },
+  "volta": {
+    "node": "26.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  }
+}
