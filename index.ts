@@ -1,28 +1,27 @@
 #!/usr/bin/env node
 import { api } from "./core/api.ts";
-import type { Ship } from "./core/types.ts"
+import { miscCommands } from "./cli/misc.ts";
+import type { CommandGroup } from "./cli/command.ts";
+import { shipCommands } from "./cli/ships.ts";
+import { expandShip } from "./utils.ts";
+import { contractCommands } from "./cli/contracts.ts";
+import { systemCommands } from "./cli/systems.ts";
 
-type Command = (args: string[]) => Promise<void>;
+const groups: Record<string, CommandGroup> = {
+    Ship: shipCommands,
+    System: systemCommands,
+    Contracts: contractCommands,
+    Misc: miscCommands,
+}
 
 const [cmd, ...rawArgs] = process.argv.slice(2);
-
-const commands: Record<string, Command> = {
-    async hello(args) {
-        console.log("Hello", args);
-    },
-    async agent() {
-        console.log(await api("/my/agent"));
-    },
-    async ships() {
-        console.log(await api<Ship>("/my/ships"));
-    },
-}
+const args = rawArgs.map(expandShip);
+const commands: CommandGroup = Object.assign({}, ...Object.values(groups));
 
 const command = cmd && Object.hasOwn(commands, cmd) ? commands[cmd] : undefined;
 
-
 if (command) {
-    await command(rawArgs);
+    await command(args);
 } else {
     console.log("Commands: " + Object.keys(commands).join(", "));
 }
