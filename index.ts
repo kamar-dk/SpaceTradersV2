@@ -12,6 +12,7 @@ import { miningCommands } from "./cli/mining.ts";
 import { surveyCommands } from "./cli/surveying.ts";
 import { automationCommands } from "./cli/automation.ts";
 import { fleetCommands } from "./cli/fleet.ts";
+import { shipyardCommands } from "./cli/shipyard.ts";
 
 const groups: Record<string, CommandGroup> = {
     Ship: shipCommands,
@@ -25,6 +26,7 @@ const groups: Record<string, CommandGroup> = {
     Survey: surveyCommands,
     Automation: automationCommands,
     Fleet: fleetCommands,
+    Shipyard: shipyardCommands,
 }
 
 const [cmd, ...rawArgs] = process.argv.slice(2);

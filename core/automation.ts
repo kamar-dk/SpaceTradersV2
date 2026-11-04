@@ -179,7 +179,7 @@ export type SurveyOptions = {
 // Flies to an asteroid and keeps the survey store stocked until shouldStop()
 export async function runSurveyLoop(ship: string, waypoint: string, options: SurveyOptions = {}): Promise<void> {
     const {
-        keep = [], minSurveyScore = 0.3, enoughGood = 3,
+        keep = [], minSurveyScore = 0.3, enoughGood = 5,
         onEvent = () => {}, wait = sleep, shouldStop = () => false,
     } = options;
 
