@@ -29,8 +29,14 @@ const commands: CommandGroup = Object.assign({}, ...Object.values(groups));
 
 const command = cmd && Object.hasOwn(commands, cmd) ? commands[cmd] : undefined;
 
-if (command) {
-    await command(args);
-} else {
-    console.log("Commands: " + Object.keys(commands).join(", "));
+
+try {
+    if (command) {
+        await command(args);
+    } else {
+        console.log("Commands: " + Object.keys(commands).join(", "));
+    }
+} catch (e) {
+    console.error(e instanceof Error ? e.message : e);
+    process.exitCode = 1;
 }

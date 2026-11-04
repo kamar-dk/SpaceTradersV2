@@ -22,7 +22,7 @@ export const miningCommands = {
     },
 
     async mine([ship, ...keep]: string[]) {
-        if (!ship) return console.log("Usage: st extract <ship> [surveySignature]");
+        if (!ship) return console.log("Usage: st mine <ship> [goods to keep...]");
         let stopping = false;
         process.once("SIGINT", () => {
             console.log("\nStopping after this step... (Ctrl+C again to force quit)");

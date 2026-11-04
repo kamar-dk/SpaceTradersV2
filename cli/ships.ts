@@ -1,8 +1,10 @@
 import * as ships from "../core/ships.ts"
 import { formatDuration, secondsUntil } from "../utils.ts"
+import { nextArrival } from "../core/navigation.ts";
+import { countdown } from "./countdown.ts";
 
 export const shipCommands = {
-    async ships() {
+    async ships([mode]: string[]) {
         const list = await ships.listShips();
 
         for (const s of list) {
@@ -10,6 +12,14 @@ export const shipCommands = {
                 ? `  → ${s.nav.route.destination.symbol}  ETA ${formatDuration(secondsUntil(s.nav.route.arrival))}`
                 : "";
             console.log(`${s.symbol}  ${s.nav.status}  @ ${s.nav.waypointSymbol}  fuel ${s.fuel.current}/${s.fuel.capacity}  cargo ${s.cargo.units}/${s.cargo.capacity}${eta}`);
+        }
+
+        if (mode === "wait") {
+            const next = nextArrival(list);
+            if (next) {
+                await countdown(secondsUntil(next.nav.route.arrival), `${next.symbol} arriving in`);
+                console.log(`${next.symbol} has arrived at ${next.nav.route.destination.symbol}`);
+            }
         }
     },
     async ship([symbol, mode]: string[]) {

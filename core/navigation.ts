@@ -37,6 +37,12 @@ type RouteEstimate = {
     possible: boolean; // enough fuel in the tank right now?
 };
 
+export function nextArrival(ships: Ship[]): Ship | undefined {
+    return ships
+        .filter((s) => s.nav.status === "IN_TRANSIT")
+        .sort((a, b) => secondsUntil(a.nav.route.arrival) - secondsUntil(b.nav.route.arrival))[0];
+}
+
 export async function orbit(ship: string): Promise<ShipNav> {
     const data = await api<{ nav: ShipNav }>(`/my/ships/${ship}/orbit`, { method: "POST" });
     return data.nav;

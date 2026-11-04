@@ -15,7 +15,7 @@ export function getMarket(waypoint: string): Promise<Market> {
 export async function getLiveMarket(waypoint: string, attempts = 4): Promise<Market> {
     let market = await getMarket(waypoint);
     
-    for (let attempt = 1; !market.tradeGoods && attempt < attempts; attempts++) {
+    for (let attempt = 1; !market.tradeGoods && attempt < attempts; attempt++) {
         await sleep(3);
         market = await getMarket(waypoint);
     }
