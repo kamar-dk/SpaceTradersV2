@@ -9,6 +9,7 @@ import { navigationCommands } from "./cli/navigation.ts";
 import { cargoCommands } from "./cli/cargo.ts";
 import { marketCommands } from "./cli/market.ts";
 import { miningCommands } from "./cli/mining.ts";
+import { surveyCommands } from "./cli/surveying.ts";
 
 const groups: Record<string, CommandGroup> = {
     Ship: shipCommands,
@@ -19,6 +20,7 @@ const groups: Record<string, CommandGroup> = {
     Cargo: cargoCommands,
     Misc: miscCommands,
     Mining: miningCommands,
+    Survey: surveyCommands,
 }
 
 const [cmd, ...rawArgs] = process.argv.slice(2);
