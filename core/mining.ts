@@ -2,7 +2,7 @@ import { api, ApiError } from "./api.ts";
 import type { Cooldown, Extraction, ShipCargo, Survey, TradeSymbol,  } from "./types.ts";
 import { sleep } from "../utils.ts";
 import { getCargo, jettison } from "./cargo.ts";
-import { getShip } from "./ships.ts";
+import { getCooldown, getShip } from "./ships.ts";
 import { listSurveys, removeSurvey } from "./surveyStore.ts";
 import { bestSurvey, scoreSurvey } from "./surveying.ts";
 
@@ -25,11 +25,6 @@ export async function extractWithSurvey(ship: string, survey: Survey) {
     }
 }
 
-// Returns undefined when the ship has no cooldown (the API answers 204)
-export function getCooldown(ship: string): Promise<Cooldown | undefined> {
-    return api<Cooldown | undefined>(`/my/ships/${ship}/cooldown`);
-}
-
 export type MiningEvent =
     | { type: "extracted"; symbol: TradeSymbol; units: number; cargo: ShipCargo; surveyed: boolean }
     | { type: "jettisoned"; symbol: TradeSymbol; units: number; cargo: ShipCargo; surveyed: boolean }
@@ -47,7 +42,7 @@ export type MiningOptions = {
 // Returns the cargo when full, or null if stopped early.
 // With a keep list, it uses the best saved survey for this asteroid when one scores high enough.
 export async function mineUntilFull(ship: string, options: MiningOptions = {}): Promise<ShipCargo | null> { 
-    const { keep = [], onEvent = () => {}, wait = sleep, shouldStop = () => false, minSurveyScore = 0.5 } = options;
+    const { keep = [], onEvent = () => {}, wait = sleep, shouldStop = () => false, minSurveyScore = 0.3 } = options;
 
     // Already full? Nothing to do.
     const start = await getCargo(ship);

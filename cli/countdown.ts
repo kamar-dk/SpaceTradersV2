@@ -1,7 +1,8 @@
 import { formatDuration, sleep } from "../utils.ts";
 
-export async function countdown(seconds: number, label = "Waiting"): Promise<void> {
+export async function countdown(seconds: number, label = "Waiting", shouldStop?: () => boolean): Promise<void> {
     for (let s = Math.ceil(seconds); s > 0; s--) {
+        if (shouldStop?.()) break;
         process.stdout.write(`\r  ${label} ${formatDuration(s)}   `);
         await sleep(1);
     }

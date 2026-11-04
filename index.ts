@@ -10,6 +10,8 @@ import { cargoCommands } from "./cli/cargo.ts";
 import { marketCommands } from "./cli/market.ts";
 import { miningCommands } from "./cli/mining.ts";
 import { surveyCommands } from "./cli/surveying.ts";
+import { automationCommands } from "./cli/automation.ts";
+import { fleetCommands } from "./cli/fleet.ts";
 
 const groups: Record<string, CommandGroup> = {
     Ship: shipCommands,
@@ -21,6 +23,8 @@ const groups: Record<string, CommandGroup> = {
     Misc: miscCommands,
     Mining: miningCommands,
     Survey: surveyCommands,
+    Automation: automationCommands,
+    Fleet: fleetCommands,
 }
 
 const [cmd, ...rawArgs] = process.argv.slice(2);
@@ -38,5 +42,6 @@ try {
     }
 } catch (e) {
     console.error(e instanceof Error ? e.message : e);
+    if (e instanceof Error && e.cause) console.error("Cause:", e.cause);
     process.exitCode = 1;
 }

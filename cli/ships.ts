@@ -48,6 +48,14 @@ export const shipCommands = {
             ? `  ${formatDuration(s.cooldown.remainingSeconds)} remaining`
             : "  Ready");
 
+        section("Navigation");
+        console.log(`  Status:   ${s.nav.status}, flight mode ${s.nav.flightMode}`);
+        console.log(`  Location: ${s.nav.waypointSymbol} (system ${s.nav.systemSymbol})`);
+        if (s.nav.status === "IN_TRANSIT") {
+            const r = s.nav.route;
+            console.log(`  Route:    ${r.origin.symbol} → ${r.destination.symbol}, ETA ${formatDuration(secondsUntil(r.arrival))}`);
+        }
+
         section("Crew");
         console.log(`  ${s.crew.current}/${s.crew.capacity} (needs ${s.crew.required}), morale ${s.crew.morale}, wages ${s.crew.wages}, rotation ${s.crew.rotation}`);
 
