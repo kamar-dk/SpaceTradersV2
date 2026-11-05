@@ -1,3 +1,6 @@
+$side-width: 420px;   // two compact cards side by side, plus the gap
+$gap: 16px;
+
 :host {
     display: flex;
     flex-direction: column;   // tabs on top, content below
@@ -12,24 +15,31 @@ nav {
     flex: 1;
     min-height: 0;
     display: flex;            // map | side column
-    gap: 16px;
+    gap: $gap;
     padding-top: 12px;
 }
 
 app-system-map {
+    flex: 1;          // take all width the column doesn't use
+    min-width: 0;
     height: 100%;
-    aspect-ratio: 1;
-    max-width: 65%;
-    flex: none;
 }
 
 .side {
-    flex: 1;
+    flex: none;
+    width: $side-width;
     min-width: 0;
     overflow-y: auto;
 
-    h3 {
-        margin-top: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));   // exactly two cards per row
+    gap: 8px;
+    align-content: start;     // rows keep their height instead of stretching to fill the column
+
+    h3,
+    .hint {
+        grid-column: 1 / -1;  // the heading and the hint span the full width
+        margin: 0 0 4px;
     }
 }
 

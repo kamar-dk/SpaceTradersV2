@@ -6,11 +6,12 @@ import { SystemMapComponent } from "../../system-map/system-map.component";
 import { ApiService } from "../../services/api.service";
 import { ShipsService } from "../../services/ships.service";
 import { systemOf } from "../../utils/symbols";
+import { ShipCardComponent } from "../../ship-card/ship-card.component";
 
 type SystemTab = { symbol: string; label: string; ships: number };
 
 @Component({
-  imports: [RouterLink, MatTabsModule, SystemMapComponent],
+  imports: [RouterLink, MatTabsModule, SystemMapComponent, ShipCardComponent],
   selector: 'app-map-page',
   styleUrl: './map-page.component.scss',
   templateUrl: './map-page.component.html',

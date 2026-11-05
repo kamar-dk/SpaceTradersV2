@@ -1,0 +1,44 @@
+:host {
+    display: block;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 12px;
+
+    mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+    }
+}
+
+// Label | bar | numbers, lined up in columns
+.meter {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--mat-sys-on-surface-variant);
+}
+
+h4 {
+    margin: 12px 0 4px;
+    font-size: 13px;
+}
+
+ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+}
+
+.compact {
+    .status {
+        margin-bottom: 8px;
+    }
+}
