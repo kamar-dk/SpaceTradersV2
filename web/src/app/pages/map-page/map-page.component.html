@@ -1,0 +1,23 @@
+<nav mat-tab-nav-bar [tabPanel]="panel" mat-stretch-tabs="false" mat-align-tabs="start">
+    @for (tab of tabs(); track tab.symbol) {
+        <a mat-tab-link [routerLink]="['/map', tab.symbol]" [active]="tab.symbol === system()">
+            {{ tab.label }}
+            @if (tab.ships) {
+                <span class="count">{{ tab.ships }}</span>
+            }
+        </a>
+    }
+</nav>
+
+<mat-tab-nav-panel #panel class="content">
+    <app-system-map [system]="system()" />
+
+    <aside class="side">
+        <h3>Ships here</h3>
+        @for (ship of ships(); track ship.symbol) {
+            <div>{{ ship.symbol }} · {{ ship.nav.status }} · {{ ship.nav.waypointSymbol }}</div>
+        } @empty {
+            <p class="hint">No ships in this system.</p>
+        }
+    </aside>
+</mat-tab-nav-panel>

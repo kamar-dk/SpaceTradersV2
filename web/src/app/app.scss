@@ -1,15 +1,21 @@
 :host {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;          // the whole window
+    display: flex;          // row: sidebar | main
+    height: 100vh;
 }
 
-header {
-    flex: none;             // only as tall as the card needs
+.sidebar {
+    flex: none;
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--mat-sys-outline-variant);
+    padding: 8px;
+    gap: 8px;
 }
 
 main {
-    flex: 1;                // takes all the remaining height
-    min-height: 0;          // lets it shrink properly inside the flexbox
-    padding: 0 16px 16px;
+    flex: 1;
+    min-width: 0;           // lets main shrink instead of overflowing
+    padding: 16px;
+    overflow: auto;         // long pages scroll inside main, the sidebar stays put
 }

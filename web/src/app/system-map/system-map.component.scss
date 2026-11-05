@@ -1,18 +1,13 @@
 $bg: #0d1117;
 
 :host {
-    display: flex;
-    gap: 16px;
-    height: 100%;
+    display: block;
 }
 
 
 .map-wrap {
     position: relative;
     height: 100%;
-    aspect-ratio: 1;      // square: width follows the height
-    max-width: 65%;       // leave at least a third for the side column
-    flex: none;
 }
 
 .map {

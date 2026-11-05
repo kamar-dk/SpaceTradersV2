@@ -5,7 +5,11 @@
             <mat-card-subtitle>{{ a.startingFaction }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content class="stats">
-            <span><strong>{{ a.credits.toLocaleString() }}</strong> credits · {{ a.shipCount }} ships · HQ {{ a.headquarters }}</span>
+            <div class="stats">
+                <span><strong>{{ a.credits.toLocaleString() }}</strong> credits</span>
+                <span>{{ a.shipCount }} ships</span>
+                <span>HQ {{ a.headquarters }}</span>
+            </div>
         </mat-card-content>
     </mat-card>
 } @else {

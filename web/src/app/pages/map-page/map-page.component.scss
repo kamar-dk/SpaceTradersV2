@@ -1,0 +1,47 @@
+:host {
+    display: flex;
+    flex-direction: column;   // tabs on top, content below
+    height: 100%;
+}
+
+nav {
+    flex: none;
+}
+
+.content {
+    flex: 1;
+    min-height: 0;
+    display: flex;            // map | side column
+    gap: 16px;
+    padding-top: 12px;
+}
+
+app-system-map {
+    height: 100%;
+    aspect-ratio: 1;
+    max-width: 65%;
+    flex: none;
+}
+
+.side {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+
+    h3 {
+        margin-top: 0;
+    }
+}
+
+.hint {
+    color: var(--mat-sys-on-surface-variant);
+}
+
+.count {
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 8px;
+    font-size: 11px;
+    background: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+}

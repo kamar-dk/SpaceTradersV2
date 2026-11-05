@@ -49,11 +49,11 @@ type ShipMarker = {
 };
 
 @Component({
-    selector: "app-map",
-    templateUrl: "./map.component.html",
-    styleUrl: "./map.component.scss",
+    selector: "app-system-map",
+    templateUrl: "./system-map.component.html",
+    styleUrl: "./system-map.component.scss",
 })
-export class MapComponent {
+export class SystemMapComponent {
     private api = inject(ApiService);
     private shipsService = inject(ShipsService);
 

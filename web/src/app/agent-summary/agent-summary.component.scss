@@ -1,6 +1,6 @@
 :host {
     display: block;
-    margin: 16px;            // space from the window edge
+    margin: 0px;            // space from the window edge
 }
 
 .agent-card {
@@ -9,9 +9,14 @@
 
 .stats {
     display: flex;
-    gap: 16px;               // space between the three stats
-    padding-bottom: 12px;
-    color: var(--mat-sys-on-surface-variant);   // slightly dimmer than the title
+    flex-wrap: wrap;        // items move to a new line as a whole when there's no room
+    column-gap: 12px;
+    row-gap: 2px;
+    color: var(--mat-sys-on-surface-variant);
+
+    span {
+        white-space: nowrap;   // never break inside an item
+    }
 }
 
 .loading {

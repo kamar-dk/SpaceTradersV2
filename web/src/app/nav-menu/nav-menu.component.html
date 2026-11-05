@@ -1,0 +1,10 @@
+<mat-nav-list>
+    <a mat-list-item routerLink="/map" routerLinkActive #map="routerLinkActive" [activated]="map.isActive">
+        <mat-icon matListItemIcon>map</mat-icon>
+        <span matListItemTitle>Map</span>
+    </a>
+    <a mat-list-item routerLink="/ships" routerLinkActive #ships="routerLinkActive" [activated]="ships.isActive">
+        <mat-icon matListItemIcon>rocket_launch</mat-icon>
+        <span matListItemTitle>Ships</span>
+    </a>
+</mat-nav-list>
