@@ -1,9 +1,9 @@
 import { Component, DestroyRef, computed, effect, inject, input, signal } from "@angular/core";
 import { toObservable, toSignal } from "@angular/core/rxjs-interop";
-import { switchMap, timer } from "rxjs";
+import { switchMap } from "rxjs";
 import { ApiService } from "../services/api.service";
 import type { Waypoint } from "../models/waypoint";
-import type { Ship } from "../models/ship";
+import { ShipsService } from "../services/ships.service";
 
 // --- How each waypoint type looks ---
 
@@ -30,19 +30,8 @@ const OTHER_STYLE: TypeStyle = { size: 1, color: "#9e9e9e", label: "Other" };
 // Types too numerous to label when zoomed out
 const MINOR_TYPES = new Set(["ASTEROID", "ENGINEERED_ASTEROID", "ASTEROID_FIELD", "DEBRIS_FIELD"]);
 
-const SHIP_REFRESH_MS = 15_000;
-
 function styleOf(type: string): TypeStyle {
     return TYPE_STYLES[type] ?? OTHER_STYLE;
-}
-
-// Keeps the direction from the star, but uses the square root of the distance,
-// so the crowded centre opens up and the far asteroids are pulled in.
-function spread(x: number, y: number): { x: number; y: number } {
-    const distance = Math.hypot(x, y);
-    if (distance === 0) return { x: 0, y: 0 };
-    const factor = Math.sqrt(distance) / distance;
-    return { x: x * factor, y: y * factor };
 }
 
 // --- Types used by the template ---
@@ -66,6 +55,7 @@ type ShipMarker = {
 })
 export class MapComponent {
     private api = inject(ApiService);
+    private shipsService = inject(ShipsService);
 
     system = input.required<string>();   // from :system in the URL
 
@@ -76,10 +66,7 @@ export class MapComponent {
         { initialValue: [] },
     );
 
-    ships = toSignal(
-        timer(0, SHIP_REFRESH_MS).pipe(switchMap(() => this.api.getShips())),
-        { initialValue: [] as Ship[] },
-    );
+    ships = computed(() => this.shipsService.inSystem(this.system()));
 
     // Ticks every second, so ships in transit move smoothly between refreshes
     private now = signal(Date.now());
