@@ -1,0 +1,295 @@
+import { Component, DestroyRef, computed, effect, inject, input, signal } from "@angular/core";
+import { toObservable, toSignal } from "@angular/core/rxjs-interop";
+import { switchMap, timer } from "rxjs";
+import { ApiService } from "../services/api.service";
+import type { Waypoint } from "../models/waypoint";
+import type { Ship } from "../models/ship";
+
+// --- How each waypoint type looks ---
+
+type TypeStyle = {
+    size: number;    // radius in "units" (1 unit = 1/300 of the visible width)
+    color: string;
+    label: string;
+};
+
+const TYPE_STYLES: Record<string, TypeStyle> = {
+    GAS_GIANT:           { size: 4,   color: "#ffb74d", label: "Gas giant" },
+    PLANET:              { size: 3,   color: "#4fc3f7", label: "Planet" },
+    JUMP_GATE:           { size: 2.5, color: "#ef5350", label: "Jump gate" },
+    MOON:                { size: 1.6, color: "#b0bec5", label: "Moon" },
+    ORBITAL_STATION:     { size: 1.6, color: "#ce93d8", label: "Station" },
+    FUEL_STATION:        { size: 1.6, color: "#fff176", label: "Fuel station" },
+    ASTEROID_BASE:       { size: 1.4, color: "#a1887f", label: "Asteroid base" },
+    ENGINEERED_ASTEROID: { size: 1.4, color: "#81c784", label: "Engineered asteroid" },
+    ASTEROID:            { size: 0.9, color: "#6b7280", label: "Asteroid" },
+};
+
+const OTHER_STYLE: TypeStyle = { size: 1, color: "#9e9e9e", label: "Other" };
+
+// Types too numerous to label when zoomed out
+const MINOR_TYPES = new Set(["ASTEROID", "ENGINEERED_ASTEROID", "ASTEROID_FIELD", "DEBRIS_FIELD"]);
+
+const SHIP_REFRESH_MS = 15_000;
+
+function styleOf(type: string): TypeStyle {
+    return TYPE_STYLES[type] ?? OTHER_STYLE;
+}
+
+// Keeps the direction from the star, but uses the square root of the distance,
+// so the crowded centre opens up and the far asteroids are pulled in.
+function spread(x: number, y: number): { x: number; y: number } {
+    const distance = Math.hypot(x, y);
+    if (distance === 0) return { x: 0, y: 0 };
+    const factor = Math.sqrt(distance) / distance;
+    return { x: x * factor, y: y * factor };
+}
+
+// --- Types used by the template ---
+
+type Placed = Waypoint & { px: number; py: number; style: TypeStyle };
+type View = { x: number; y: number; w: number; h: number };
+
+type ShipMarker = {
+    symbol: string;
+    number: string;
+    status: string;
+    x: number;
+    y: number;
+    route: { x1: number; y1: number; x2: number; y2: number } | null;
+};
+
+@Component({
+    selector: "app-map",
+    templateUrl: "./map.component.html",
+    styleUrl: "./map.component.scss",
+})
+export class MapComponent {
+    private api = inject(ApiService);
+
+    system = input.required<string>();   // from :system in the URL
+
+    // --- Data ---
+
+    waypoints = toSignal(
+        toObservable(this.system).pipe(switchMap((s) => this.api.getWaypoints(s))),
+        { initialValue: [] },
+    );
+
+    ships = toSignal(
+        timer(0, SHIP_REFRESH_MS).pipe(switchMap(() => this.api.getShips())),
+        { initialValue: [] as Ship[] },
+    );
+
+    // Ticks every second, so ships in transit move smoothly between refreshes
+    private now = signal(Date.now());
+
+    // --- Camera (zoom and pan) ---
+
+    private view = signal<View>({ x: -10, y: -10, w: 20, h: 20 });
+    private fitView = signal<View | null>(null);   // the "whole system" view, for resetting
+
+    viewBox = computed(() => {
+        const v = this.view();
+        return `${v.x} ${v.y} ${v.w} ${v.h}`;
+    });
+
+    // Sizes follow the zoom, so things stay the same size on screen
+    unit = computed(() => this.view().w / 600);
+    textSize = computed(() => this.view().w / 90);
+
+    zoomedIn = computed(() => {
+        const fit = this.fitView();
+        return fit !== null && this.view().w < fit.w / 3;
+    });
+
+    // --- Placing waypoints ---
+
+    // Spread positions, with moons and stations in a ring around their planet.
+    // The ring radius is in units, so moons stay outside the planet at every zoom level.
+    placed = computed<Placed[]>(() => {
+      const list = this.waypoints();
+      const unit = this.unit();
+      const bySymbol = new Map(list.map((w) => [w.symbol, w]));
+
+      return list.map((w) => {
+          const style = styleOf(w.type);
+          const parent = w.orbits ? bySymbol.get(w.orbits) : undefined;
+
+          if (!parent) return { ...w, px: w.x, py: w.y, style };
+
+          const siblings = parent.orbitals.map((o) => o.symbol);
+          const angle = (2 * Math.PI * siblings.indexOf(w.symbol)) / Math.max(siblings.length, 1) - Math.PI / 2;
+          const ring = unit * (styleOf(parent.type).size + style.size + 2);
+          return { ...w, px: parent.x + Math.cos(angle) * ring, py: parent.y + Math.sin(angle) * ring, style };
+      });
+  });
+
+    private positionOf = computed(() => new Map(this.placed().map((w) => [w.symbol, w])));
+
+    // --- Selection ---
+
+    selectedSymbol = signal<string | null>(null);
+    selected = computed(() => this.positionOf().get(this.selectedSymbol() ?? "") ?? null);
+
+    // --- Ships ---
+
+    shipMarkers = computed(() => {
+        const now = this.now();
+        const pos = this.positionOf();
+
+        return this.ships().flatMap((s): ShipMarker[] => {
+            const number = s.symbol.split("-").pop() ?? s.symbol;
+            const status = s.nav.status;
+
+            if (status === "IN_TRANSIT") {
+                const from = pos.get(s.nav.route.origin.symbol);
+                const to = pos.get(s.nav.route.destination.symbol);
+                if (!from || !to) return [];
+
+                const start = new Date(s.nav.route.departureTime).getTime();
+                const end = new Date(s.nav.route.arrival).getTime();
+                const t = Math.min(1, Math.max(0, (now - start) / Math.max(end - start, 1)));
+
+                return [{
+                    symbol: s.symbol, number, status,
+                    x: from.px + (to.px - from.px) * t,
+                    y: from.py + (to.py - from.py) * t,
+                    route: { x1: from.px, y1: from.py, x2: to.px, y2: to.py },
+                }];
+            }
+
+            const at = pos.get(s.nav.waypointSymbol);
+            return at ? [{ symbol: s.symbol, number, status, x: at.px, y: at.py, route: null }] : [];
+        });
+    });
+
+    // Waypoints with a ship parked there; these always get a label
+    private shipWaypoints = computed(
+        () => new Set(this.ships().filter((s) => s.nav.status !== "IN_TRANSIT").map((s) => s.nav.waypointSymbol)),
+    );
+
+    // Only the types that exist in this system
+    legend = computed(() => {
+        const present = new Set(this.placed().map((w) => w.style));
+        return [...Object.values(TYPE_STYLES), OTHER_STYLE].filter((s) => present.has(s));
+    });
+
+    // --- Dragging state ---
+
+    private drag: { x: number; y: number; view: View; scale: number; moved: boolean } | null = null;
+    private justDragged = false;
+    dragging = signal(false);
+
+    constructor() {
+        const id = setInterval(() => this.now.set(Date.now()), 1000);
+        inject(DestroyRef).onDestroy(() => clearInterval(id));
+
+        // Fit the whole system when its waypoints load.
+        // Uses spread() directly instead of placed(), because placed() depends on the view,
+        // and reading it here would refit on every zoom.
+        effect(() => {
+            const list = this.waypoints();
+            if (list.length === 0) return;
+
+            const xs = [0, ...list.map((w) => w.x)];
+            const ys = [0, ...list.map((w) => w.y)];
+            const minX = Math.min(...xs), maxX = Math.max(...xs);
+            const minY = Math.min(...ys), maxY = Math.max(...ys);
+            const size = Math.max(maxX - minX, maxY - minY) * 1.15;   // 15% margin
+            const cx = (minX + maxX) / 2;
+            const cy = (minY + maxY) / 2;
+
+            const fit = { x: cx - size / 2, y: cy - size / 2, w: size, h: size };
+            this.fitView.set(fit);
+            this.view.set(fit);
+        });
+    }
+
+    // --- Mouse handling ---
+
+    // Zoom towards the mouse cursor
+    onWheel(event: WheelEvent): void {
+        event.preventDefault();
+        const svg = event.currentTarget as SVGSVGElement;
+        const ctm = svg.getScreenCTM();
+        const fit = this.fitView();
+        if (!ctm || !fit) return;
+
+        const factor = event.deltaY > 0 ? 1.15 : 1 / 1.15;
+        const v = this.view();
+        const w = v.w * factor;
+        if (w < fit.w / 40 || w > fit.w * 3) return;   // don't zoom endlessly in or out
+
+        const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(ctm.inverse());
+        this.view.set({
+            x: p.x - (p.x - v.x) * factor,
+            y: p.y - (p.y - v.y) * factor,
+            w,
+            h: v.h * factor,
+        });
+    }
+
+    onPointerDown(event: PointerEvent): void {
+        if (event.button !== 0) return;   // left button / touch only
+        const ctm = (event.currentTarget as SVGSVGElement).getScreenCTM();
+        if (!ctm) return;
+
+        this.justDragged = false;
+        this.drag = { x: event.clientX, y: event.clientY, view: this.view(), scale: 1 / ctm.a, moved: false };
+    }
+
+    onPointerMove(event: PointerEvent): void {
+        if (!this.drag) return;
+        const dx = event.clientX - this.drag.x;
+        const dy = event.clientY - this.drag.y;
+
+        // Ignore tiny movements, so a normal click still works
+        if (!this.drag.moved) {
+            if (Math.hypot(dx, dy) < 4) return;
+            this.drag.moved = true;
+            this.dragging.set(true);
+            (event.currentTarget as SVGSVGElement).setPointerCapture(event.pointerId);
+        }
+
+        const v = this.drag.view;
+        this.view.set({ ...v, x: v.x - dx * this.drag.scale, y: v.y - dy * this.drag.scale });
+    }
+
+    onPointerUp(): void {
+        this.justDragged = this.drag?.moved ?? false;
+        this.drag = null;
+        this.dragging.set(false);
+    }
+
+    resetView(): void {
+        const fit = this.fitView();
+        if (fit) this.view.set(fit);
+    }
+
+    select(w: Placed): void {
+        if (this.justDragged) return;   // the end of a drag isn't a click
+        this.selectedSymbol.set(w.symbol);
+    }
+
+    // --- Template helpers ---
+
+    // Label planets and other big things always; asteroids and moons only when zoomed in,
+    // selected, or when a ship is there
+    showLabel(w: Placed): boolean {
+        const important = !w.orbits && !MINOR_TYPES.has(w.type);
+        return important || this.zoomedIn() || w.symbol === this.selectedSymbol() || this.shipWaypoints().has(w.symbol);
+    }
+
+    has(w: Waypoint, trait: string): boolean {
+        return w.traits.some((t) => t.symbol === trait);
+    }
+
+    traitList(w: Waypoint): string {
+        return w.traits.map((t) => t.name).join(", ");
+    }
+
+    shortName(symbol: string): string {
+        return symbol.split("-").pop() ?? symbol;
+    }
+}

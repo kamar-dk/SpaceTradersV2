@@ -1,0 +1,99 @@
+<div class="map-wrap">
+    <svg class="map"
+         [class.dragging]="dragging()"
+         [attr.viewBox]="viewBox()"
+         (wheel)="onWheel($event)"
+         (pointerdown)="onPointerDown($event)"
+         (pointermove)="onPointerMove($event)"
+         (pointerup)="onPointerUp()"
+         (pointercancel)="onPointerUp()"
+         (dblclick)="resetView()">
+
+        <!-- The star -->
+        <circle cx="0" cy="0" [attr.r]="unit() * 4" class="star" />
+
+        <!-- Routes of ships in transit (bottom layer) -->
+        @for (s of shipMarkers(); track s.symbol) {
+            @if (s.route) {
+                <line class="route"
+                      [attr.x1]="s.route.x1" [attr.y1]="s.route.y1" [attr.x2]="s.route.x2" [attr.y2]="s.route.y2"
+                      [attr.stroke-width]="unit() * 0.4" [attr.stroke-dasharray]="unit() * 2" />
+            }
+        }
+
+        <!-- Waypoints -->
+        @for (w of placed(); track w.symbol) {
+            <g class="waypoint" (click)="select(w)">
+                <!-- Invisible, bigger circle so small dots are easy to click -->
+                <circle class="hit" [attr.cx]="w.px" [attr.cy]="w.py" [attr.r]="unit() * (w.style.size + 2)" />
+
+                @if (has(w, "MARKETPLACE")) {
+                    <circle class="market-ring" [attr.cx]="w.px" [attr.cy]="w.py"
+                            [attr.r]="unit() * (w.style.size + 1.2)" [attr.stroke-width]="unit() * 0.35" />
+                }
+                @if (w.symbol === selectedSymbol()) {
+                    <circle class="selected-ring" [attr.cx]="w.px" [attr.cy]="w.py"
+                            [attr.r]="unit() * (w.style.size + 2.4)" [attr.stroke-width]="unit() * 0.5" />
+                }
+
+                <circle [attr.cx]="w.px" [attr.cy]="w.py" [attr.r]="unit() * w.style.size" [attr.fill]="w.style.color">
+                    <title>{{ shortName(w.symbol) }} · {{ w.style.label }}</title>
+                </circle>
+            </g>
+        }
+
+        <!-- Ships -->
+        @for (s of shipMarkers(); track s.symbol) {
+            <rect class="ship"
+                  [attr.x]="s.x - unit() * 1.3" [attr.y]="s.y - unit() * 1.3"
+                  [attr.width]="unit() * 2.6" [attr.height]="unit() * 2.6"
+                  [attr.transform]="'rotate(45 ' + s.x + ' ' + s.y + ')'">
+                <title>{{ s.symbol }} · {{ s.status }}</title>
+            </rect>
+        }
+
+        <!-- Labels last, so nothing covers them -->
+        @for (w of placed(); track w.symbol) {
+            @if (showLabel(w)) {
+                <text class="label"
+                      [attr.x]="w.px + unit() * (w.style.size + 1.5)" [attr.y]="w.py"
+                      [attr.font-size]="textSize()" [attr.stroke-width]="textSize() * 0.3">
+                    {{ shortName(w.symbol) }}
+                </text>
+            }
+        }
+
+        @for (s of shipMarkers(); track s.symbol) {
+            <text class="ship-label"
+                  [attr.x]="s.x" [attr.y]="s.y - unit() * 3"
+                  [attr.font-size]="textSize()" [attr.stroke-width]="textSize() * 0.3">
+                S{{ s.number }}
+            </text>
+        }
+    </svg>
+
+    <ul class="legend">
+        @for (item of legend(); track item.label) {
+            <li><span class="swatch" [style.background]="item.color"></span>{{ item.label }}</li>
+        }
+        <li><span class="swatch market"></span>Marketplace</li>
+        <li><span class="swatch ship"></span>Ship</li>
+    </ul>
+
+    @if (selected(); as w) {
+        <div class="panel">
+            <button class="close" (click)="selectedSymbol.set(null)">✕</button>
+            <strong>{{ w.symbol }}</strong> · {{ w.style.label }} · ({{ w.x }}, {{ w.y }})
+            @if (w.orbits) {
+                <div>Orbits {{ shortName(w.orbits) }}</div>
+            }
+            @if (w.traits.length) {
+                <div class="traits">{{ traitList(w) }}</div>
+            }
+        </div>
+    }
+</div>
+
+<aside class="side">
+    
+</aside>

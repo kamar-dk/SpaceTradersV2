@@ -1,0 +1,146 @@
+$bg: #0d1117;
+
+:host {
+    display: flex;
+    gap: 16px;
+    height: 100%;
+}
+
+
+.map-wrap {
+    position: relative;
+    height: 100%;
+    aspect-ratio: 1;      // square: width follows the height
+    max-width: 65%;       // leave at least a third for the side column
+    flex: none;
+}
+
+.map {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: $bg;
+    border-radius: 8px;
+    cursor: grab;
+    touch-action: none;   // lets pointer events handle touch dragging
+    user-select: none;
+
+    &.dragging {
+        cursor: grabbing;
+    }
+}
+
+.side {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;     // scroll inside the column if it gets long
+}
+
+.hint {
+    color: var(--mat-sys-on-surface-variant);
+}
+
+.star { fill: #fff3c4; }
+
+.waypoint { cursor: pointer; }
+.hit { fill: transparent; }
+
+.market-ring {
+    fill: none;
+    stroke: #ffffff;
+    opacity: 0.6;
+}
+
+.selected-ring {
+    fill: none;
+    stroke: #ffd166;
+}
+
+.route {
+    stroke: #ffd166;
+    opacity: 0.6;
+}
+
+.ship { fill: #ffd166; }
+
+// Text with a dark outline behind the letters, readable on top of anything
+.label,
+.ship-label {
+    stroke: $bg;
+    paint-order: stroke;
+    dominant-baseline: middle;
+    font-family: sans-serif;
+    pointer-events: none;   // clicks go through to the waypoint
+}
+
+.label { fill: #c8d0dc; }
+
+.ship-label {
+    fill: #ffd166;
+    font-weight: bold;
+    text-anchor: middle;
+}
+
+.legend {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    margin: 0;
+    padding: 8px 12px;
+    list-style: none;
+    font-size: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+
+    li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+}
+
+.swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+
+    &.market {
+        border: 1.5px solid rgba(255, 255, 255, 0.7);
+        width: 8px;
+        height: 8px;
+    }
+
+    &.ship {
+        background: #ffd166;
+        border-radius: 0;
+        transform: rotate(45deg) scale(0.8);
+    }
+}
+
+.panel {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    max-width: min(420px, calc(100% - 24px));
+    padding: 10px 36px 10px 12px;
+    background: rgba(21, 27, 43, 0.92);
+    color: #c8d0dc;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    border: none;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.traits {
+    margin-top: 4px;
+    font-size: 0.9em;
+    opacity: 0.7;
+}

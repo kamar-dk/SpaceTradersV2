@@ -1,0 +1,18 @@
+@if (agent(); as a) {
+    <mat-card class="agent-card" appearance="outlined">
+        <mat-card-header>
+            <mat-card-title>{{ a.symbol }}</mat-card-title>
+            <mat-card-subtitle>{{ a.startingFaction }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content class="stats">
+            <span><strong>{{ a.credits.toLocaleString() }}</strong> credits · {{ a.shipCount }} ships · HQ {{ a.headquarters }}</span>
+        </mat-card-content>
+    </mat-card>
+} @else {
+    <mat-card class="agent-card" appearance="outlined">
+        <mat-card-content class="loading">
+            <mat-spinner diameter="24" />
+            <span>Loading agent…</span>
+        </mat-card-content>
+    </mat-card>
+}

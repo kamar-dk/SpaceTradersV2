@@ -1,0 +1,15 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;          // the whole window
+}
+
+header {
+    flex: none;             // only as tall as the card needs
+}
+
+main {
+    flex: 1;                // takes all the remaining height
+    min-height: 0;          // lets it shrink properly inside the flexbox
+    padding: 0 16px 16px;
+}

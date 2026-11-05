@@ -1,0 +1,21 @@
+:host {
+    display: block;
+    margin: 16px;            // space from the window edge
+}
+
+.agent-card {
+    width: fit-content;      // only as wide as its contents
+}
+
+.stats {
+    display: flex;
+    gap: 16px;               // space between the three stats
+    padding-bottom: 12px;
+    color: var(--mat-sys-on-surface-variant);   // slightly dimmer than the title
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
