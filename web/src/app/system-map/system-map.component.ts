@@ -36,7 +36,7 @@ function styleOf(type: string): TypeStyle {
 
 // --- Types used by the template ---
 
-type Placed = Waypoint & { px: number; py: number; style: TypeStyle };
+type Placed = Waypoint & { px: number; py: number; style: TypeStyle; angle: number | null };
 type View = { x: number; y: number; w: number; h: number };
 
 type ShipMarker = {
@@ -81,14 +81,15 @@ export class SystemMapComponent {
         return `${v.x} ${v.y} ${v.w} ${v.h}`;
     });
 
-    // Sizes follow the zoom, so things stay the same size on screen
-    unit = computed(() => this.view().w / 600);
-    textSize = computed(() => this.view().w / 90);
-
-    zoomedIn = computed(() => {
+    // How far in you are: 1 = the whole system, 2 = twice as close, ...
+    zoom = computed(() => {
         const fit = this.fitView();
-        return fit !== null && this.view().w < fit.w / 3;
+        return fit ? fit.w / this.view().w : 1;
     });
+
+    // Sizes follow the zoom, so things stay the same size on screen
+    unit = computed(() => (this.view().w / 600) * Math.pow(this.zoom(), 0.6));
+    textSize = computed(() => (this.view().w / 80) * Math.pow(this.zoom(), 0.3));
 
     // --- Placing waypoints ---
 
@@ -103,12 +104,12 @@ export class SystemMapComponent {
           const style = styleOf(w.type);
           const parent = w.orbits ? bySymbol.get(w.orbits) : undefined;
 
-          if (!parent) return { ...w, px: w.x, py: w.y, style };
+          if (!parent) return { ...w, px: w.x, py: w.y, style, angle: null };
 
           const siblings = parent.orbitals.map((o) => o.symbol);
           const angle = (2 * Math.PI * siblings.indexOf(w.symbol)) / Math.max(siblings.length, 1) - Math.PI / 2;
-          const ring = unit * (styleOf(parent.type).size + style.size + 2);
-          return { ...w, px: parent.x + Math.cos(angle) * ring, py: parent.y + Math.sin(angle) * ring, style };
+          const ring = unit * (styleOf(parent.type).size + style.size + 4);
+          return { ...w, px: parent.x + Math.cos(angle) * ring, py: parent.y + Math.sin(angle) * ring, style, angle };
       });
   });
 
@@ -260,12 +261,28 @@ export class SystemMapComponent {
     }
 
     // --- Template helpers ---
+    
+    // Where a label goes: to the right for normal waypoints,
+    // and outwards (away from the planet) for moons and stations
+    label(w: Placed): { x: number; y: number; anchor: string } {
+        const gap = this.unit() * (w.style.size + 1.5);
+        if (w.angle === null) return { x: w.px + gap, y: w.py, anchor: "start" };
+
+        const cos = Math.cos(w.angle);
+        const sin = Math.sin(w.angle);
+        // Right side: text starts at the point. Left side: text ends at it. Top/bottom: centred.
+        const anchor = cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle";
+        const extraY = anchor === "middle" ? Math.sign(sin) * this.textSize() * 0.6 : 0;
+        return { x: w.px + cos * gap, y: w.py + sin * gap + extraY, anchor };
+    }
 
     // Label planets and other big things always; asteroids and moons only when zoomed in,
     // selected, or when a ship is there
     showLabel(w: Placed): boolean {
-        const important = !w.orbits && !MINOR_TYPES.has(w.type);
-        return important || this.zoomedIn() || w.symbol === this.selectedSymbol() || this.shipWaypoints().has(w.symbol);
+        if (w.symbol === this.selectedSymbol() || this.shipWaypoints().has(w.symbol)) return true;
+        if (w.orbits) return this.zoom() >= 6;               // moons and stations: only close up
+        if (MINOR_TYPES.has(w.type)) return this.zoom() >= 3; // asteroids: once zoomed in a bit
+        return true;                                          // planets, gas giants, jump gate: always
     }
 
     has(w: Waypoint, trait: string): boolean {

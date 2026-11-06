@@ -55,9 +55,10 @@
         <!-- Labels last, so nothing covers them -->
         @for (w of placed(); track w.symbol) {
             @if (showLabel(w)) {
+                @let pos = label(w);
                 <text class="label"
-                      [attr.x]="w.px + unit() * (w.style.size + 1.5)" [attr.y]="w.py"
-                      [attr.font-size]="textSize()" [attr.stroke-width]="textSize() * 0.3">
+                    [attr.x]="pos.x" [attr.y]="pos.y" [attr.text-anchor]="pos.anchor"
+                    [attr.font-size]="textSize()" [attr.stroke-width]="textSize() * 0.3">
                     {{ shortName(w.symbol) }}
                 </text>
             }
