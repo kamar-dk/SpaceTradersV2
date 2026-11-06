@@ -125,6 +125,16 @@ export class SystemMapComponent {
     shipMarkers = computed(() => {
         const now = this.now();
         const pos = this.positionOf();
+        const unit = this.unit();
+
+        // Space between parked ships: wide enough that "S1" and "S5" don't touch
+        const spacing = Math.max(unit * 4, this.textSize() * 1.8);
+
+        // How many ships are parked at each waypoint, so each row can be centred
+        const parked = this.ships().filter((s) => s.nav.status !== "IN_TRANSIT");
+        const total = new Map<string, number>();
+        for (const s of parked) total.set(s.nav.waypointSymbol, (total.get(s.nav.waypointSymbol) ?? 0) + 1);
+        const placedSoFar = new Map<string, number>();
 
         return this.ships().flatMap((s): ShipMarker[] => {
             const number = s.symbol.split("-").pop() ?? s.symbol;
@@ -148,7 +158,18 @@ export class SystemMapComponent {
             }
 
             const at = pos.get(s.nav.waypointSymbol);
-            return at ? [{ symbol: s.symbol, number, status, x: at.px, y: at.py, route: null }] : [];
+            if (!at) return [];
+
+            // This ship's place in the row: 0, 1, 2, ...
+            const index = placedSoFar.get(at.symbol) ?? 0;
+            placedSoFar.set(at.symbol, index + 1);
+            const count = total.get(at.symbol) ?? 1;
+
+            // Centre the row over the waypoint, just above its dot
+            const x = at.px + (index - (count - 1) / 2) * spacing;
+            const y = at.py - unit * (at.style.size + 3);
+
+            return [{ symbol: s.symbol, number, status, x, y, route: null }];
         });
     });
 
