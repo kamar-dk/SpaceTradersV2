@@ -11,4 +11,5 @@ export interface Waypoint {
     orbits?: string;         // set on moons and stations: the planet they orbit
     orbitals: { symbol: string }[];   // what orbits this waypoint
     traits: WaypointTrait[];
+    isUnderConstruction: boolean;
 }
