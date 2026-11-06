@@ -30,17 +30,38 @@ app-system-map {
     width: $side-width;
     min-width: 0;
     overflow-y: auto;
+}
 
+.cards {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));   // exactly two cards per row
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
-    align-content: start;     // rows keep their height instead of stretching to fill the column
 
-    h3,
     .hint {
-        grid-column: 1 / -1;  // the heading and the hint span the full width
-        margin: 0 0 4px;
+        grid-column: 1 / -1;
+        margin: 0;
     }
+}
+
+.side .mat-expansion-panel-header,
+.side .mat-expansion-panel-header:hover,
+.side .mat-expansion-panel-header:focus {
+    background: var(--app-highlight-muted);
+}
+
+.side .mat-expansion-panel-header.mat-expanded,
+.side .mat-expansion-panel-header.mat-expanded:hover,
+.side .mat-expansion-panel-header.mat-expanded:focus {
+    background: var(--app-highlight);
+
+    .mat-expansion-panel-header-title {
+        color: var(--mat-sys-on-secondary-container);
+    }
+}
+
+mat-paginator {
+    background: transparent;   // blend into the panel instead of a separate box
+    margin-top: 4px;
 }
 
 .hint {

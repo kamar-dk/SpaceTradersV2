@@ -4,6 +4,8 @@ import { switchMap } from "rxjs";
 import { ApiService } from "../services/api.service";
 import type { Waypoint } from "../models/waypoint";
 import { ShipsService } from "../services/ships.service";
+import { MatButtonModule } from "@angular/material/button";
+import { MatIconModule } from "@angular/material/icon";
 
 // --- How each waypoint type looks ---
 
@@ -49,6 +51,7 @@ type ShipMarker = {
 };
 
 @Component({
+    imports: [MatButtonModule, MatIconModule],
     selector: "app-system-map",
     templateUrl: "./system-map.component.html",
     styleUrl: "./system-map.component.scss",
@@ -111,7 +114,7 @@ export class SystemMapComponent {
           const ring = unit * (styleOf(parent.type).size + style.size + 4);
           return { ...w, px: parent.x + Math.cos(angle) * ring, py: parent.y + Math.sin(angle) * ring, style, angle };
       });
-  });
+    });
 
     private positionOf = computed(() => new Map(this.placed().map((w) => [w.symbol, w])));
 
@@ -215,28 +218,31 @@ export class SystemMapComponent {
         });
     }
 
-    // --- Mouse handling ---
-
-    // Zoom towards the mouse cursor
-    onWheel(event: WheelEvent): void {
-        event.preventDefault();
-        const svg = event.currentTarget as SVGSVGElement;
-        const ctm = svg.getScreenCTM();
+    // --- Zoom handling ---
+    private zoomAt(x: number, y: number, factor: number): void {
         const fit = this.fitView();
-        if (!ctm || !fit) return;
+        if (!fit) return;
 
-        const factor = event.deltaY > 0 ? 1.15 : 1 / 1.15;
         const v = this.view();
         const w = v.w * factor;
         if (w < fit.w / 40 || w > fit.w * 3) return;   // don't zoom endlessly in or out
 
-        const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(ctm.inverse());
         this.view.set({
-            x: p.x - (p.x - v.x) * factor,
-            y: p.y - (p.y - v.y) * factor,
+            x: x - (x - v.x) * factor,
+            y: y - (y - v.y) * factor,
             w,
             h: v.h * factor,
         });
+    }
+
+    // Mouse wheel / touchpad: zoom towards the cursor
+    onWheel(event: WheelEvent): void {
+        event.preventDefault();
+        const ctm = (event.currentTarget as SVGSVGElement).getScreenCTM();
+        if (!ctm) return;
+
+        const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(ctm.inverse());
+        this.zoomAt(p.x, p.y, event.deltaY > 0 ? 1.15 : 1 / 1.15);
     }
 
     onPointerDown(event: PointerEvent): void {
@@ -246,6 +252,12 @@ export class SystemMapComponent {
 
         this.justDragged = false;
         this.drag = { x: event.clientX, y: event.clientY, view: this.view(), scale: 1 / ctm.a, moved: false };
+    }
+
+    // Buttons: zoom around the middle of what you're looking at
+    zoomBy(factor: number): void {
+        const v = this.view();
+        this.zoomAt(v.x + v.w / 2, v.y + v.h / 2, factor);
     }
 
     onPointerMove(event: PointerEvent): void {

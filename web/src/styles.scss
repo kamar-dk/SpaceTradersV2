@@ -36,3 +36,15 @@ body {
   height: 100%;
 }
 /* You can add global styles to this file, and also import other style files */
+
+:root {
+    // Full colour: open panel / active menu item (Material's own)
+    --app-highlight: var(--mat-sys-secondary-container);
+
+    // Weaker version of the same colour: closed panel / inactive menu item
+    --app-highlight-muted: color-mix(in srgb, var(--mat-sys-secondary-container) 45%, transparent);
+}
+
+.side-panels .mat-expansion-panel-body {
+    padding: 8px 8px 12px;   // top, left/right, bottom. Use 0 for left/right to go fully edge to edge.
+}

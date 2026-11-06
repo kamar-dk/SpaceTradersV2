@@ -81,6 +81,18 @@
         <li><span class="swatch ship"></span>Ship</li>
     </ul>
 
+    <div class="zoom-controls">
+        <button mat-mini-fab (click)="zoomBy(1 / 1.4)" aria-label="Zoom in">
+            <mat-icon>add</mat-icon>
+        </button>
+        <button mat-mini-fab (click)="zoomBy(1.4)" aria-label="Zoom out">
+            <mat-icon>remove</mat-icon>
+        </button>
+        <button mat-mini-fab (click)="resetView()" aria-label="Show whole system">
+            <mat-icon>fit_screen</mat-icon>
+        </button>
+    </div>
+
     @if (selected(); as w) {
         <div class="panel">
             <button class="close" (click)="selectedSymbol.set(null)">✕</button>

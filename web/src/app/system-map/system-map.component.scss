@@ -25,6 +25,15 @@ $bg: #0d1117;
     }
 }
 
+.zoom-controls {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .side {
     flex: 1;
     min-width: 0;

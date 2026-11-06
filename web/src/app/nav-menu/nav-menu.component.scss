@@ -1,0 +1,9 @@
+a[mat-list-item] {
+    margin-bottom: 4px;
+    border-radius: 9999px;               // the same pill shape as the active item
+    background: var(--app-highlight-muted);
+}
+
+a[mat-list-item].mdc-list-item--activated {
+    background: var(--app-highlight);
+}

@@ -40,7 +40,16 @@
                 <h4>Mounts</h4>
                 <ul>
                     @for (mount of ship().mounts; track $index) {
-                        <li>{{ mount.name }}</li>
+                        <li>
+                            {{ mount.name }}
+                            @if (mount.deposits?.length) {
+                                <ul>
+                                    @for (deposit of mount.deposits; track deposit) {
+                                        <li>{{ deposit }}</li>
+                                    }
+                                </ul>
+                            }
+                        </li>
                     }
                 </ul>
             }
