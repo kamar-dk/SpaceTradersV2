@@ -1,19 +1,32 @@
 import { Component, computed, inject, input } from "@angular/core";
-import { toSignal } from "@angular/core/rxjs-interop";
+import { toObservable, toSignal } from "@angular/core/rxjs-interop";
 import { RouterLink } from "@angular/router";
+import { switchMap } from "rxjs";
 import { MatTabsModule } from "@angular/material/tabs";
 import { MatExpansionModule } from "@angular/material/expansion";
 import { SystemMapComponent } from "../../system-map/system-map.component";
 import { ShipCardComponent } from "../../ship-card/ship-card.component";
+import { WaypointCardComponent } from "../../waypoint-card/waypoint-card.component";
 import { ApiService } from "../../services/api.service";
 import { ShipsService } from "../../services/ships.service";
 import { systemOf } from "../../utils/symbols";
+import { TYPE_STYLES } from "../../utils/waypoint-styles";
 
 type SystemTab = { symbol: string; label: string; ships: number };
 
+// Waypoint types in legend order: planets first, asteroids last
+const TYPE_ORDER = Object.keys(TYPE_STYLES);
+
 @Component({
     selector: "app-map-page",
-    imports: [RouterLink, MatTabsModule, MatExpansionModule, SystemMapComponent, ShipCardComponent],
+    imports: [
+        RouterLink,
+        MatTabsModule,
+        MatExpansionModule,
+        SystemMapComponent,
+        ShipCardComponent,
+        WaypointCardComponent,
+    ],
     templateUrl: "./map-page.component.html",
     styleUrl: "./map-page.component.scss",
 })
@@ -44,4 +57,20 @@ export class MapPageComponent {
 
     // Ships in the system being shown, for the side column
     ships = computed(() => this.shipsService.inSystem(this.system()));
+
+    // Waypoints in the system being shown (the server caches them, so the map's request is instant)
+    waypoints = toSignal(
+        toObservable(this.system).pipe(switchMap((s) => this.api.getWaypoints(s))),
+        { initialValue: [] },
+    );
+
+    // Grouped by type in legend order, then by name
+    waypointList = computed(() =>
+        [...this.waypoints()].sort((a, b) => {
+            const ta = TYPE_ORDER.indexOf(a.type);
+            const tb = TYPE_ORDER.indexOf(b.type);
+            const byType = (ta === -1 ? 99 : ta) - (tb === -1 ? 99 : tb);
+            return byType || a.symbol.localeCompare(b.symbol);
+        }),
+    );
 }

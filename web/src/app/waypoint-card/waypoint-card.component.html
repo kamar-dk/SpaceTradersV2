@@ -1,0 +1,23 @@
+<mat-card class="waypoint-card" [attr.title]="waypoint().symbol">
+    <mat-card-header>
+        <span mat-card-avatar class="dot" [style.background]="style().color"></span>
+        <mat-card-title>{{ name() }}</mat-card-title>
+        <mat-card-subtitle>
+            {{ style().label }}
+            @if (waypoint().orbits; as parent) {
+                · orbits {{ short(parent) }}
+            }
+        </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+        @if (tags().length) {
+            <div class="tags">
+                @for (tag of tags(); track tag.symbol) {
+                    <span class="tag" [class.market]="tag.symbol === 'MARKETPLACE'">{{ tag.label }}</span>
+                }
+            </div>
+        }
+        <div class="coords">({{ waypoint().x }}, {{ waypoint().y }})</div>
+    </mat-card-content>
+</mat-card>

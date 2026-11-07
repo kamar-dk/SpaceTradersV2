@@ -6,35 +6,12 @@ import type { Waypoint } from "../models/waypoint";
 import { ShipsService } from "../services/ships.service";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
+import { OTHER_STYLE, TYPE_STYLES, styleOf, type TypeStyle } from "../utils/waypoint-styles";
 
 // --- How each waypoint type looks ---
 
-type TypeStyle = {
-    size: number;    // radius in "units" (1 unit = 1/300 of the visible width)
-    color: string;
-    label: string;
-};
-
-const TYPE_STYLES: Record<string, TypeStyle> = {
-    GAS_GIANT:           { size: 4,   color: "#ffb74d", label: "Gas giant" },
-    PLANET:              { size: 3,   color: "#4fc3f7", label: "Planet" },
-    JUMP_GATE:           { size: 2.5, color: "#ef5350", label: "Jump gate" },
-    MOON:                { size: 1.6, color: "#b0bec5", label: "Moon" },
-    ORBITAL_STATION:     { size: 1.6, color: "#ce93d8", label: "Station" },
-    FUEL_STATION:        { size: 1.6, color: "#fff176", label: "Fuel station" },
-    ASTEROID_BASE:       { size: 1.4, color: "#a1887f", label: "Asteroid base" },
-    ENGINEERED_ASTEROID: { size: 1.4, color: "#81c784", label: "Engineered asteroid" },
-    ASTEROID:            { size: 0.9, color: "#6b7280", label: "Asteroid" },
-};
-
-const OTHER_STYLE: TypeStyle = { size: 1, color: "#9e9e9e", label: "Other" };
-
 // Types too numerous to label when zoomed out
 const MINOR_TYPES = new Set(["ASTEROID", "ENGINEERED_ASTEROID", "ASTEROID_FIELD", "DEBRIS_FIELD"]);
-
-function styleOf(type: string): TypeStyle {
-    return TYPE_STYLES[type] ?? OTHER_STYLE;
-}
 
 // --- Types used by the template ---
 

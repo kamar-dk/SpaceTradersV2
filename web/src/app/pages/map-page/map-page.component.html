@@ -17,6 +17,7 @@
             <mat-expansion-panel expanded>
                 <mat-expansion-panel-header>
                     <mat-panel-title>Ships in system</mat-panel-title>
+                    <mat-panel-description>{{ ships().length }}</mat-panel-description>
                 </mat-expansion-panel-header>
 
                 <div class="cards scroll">
@@ -31,10 +32,15 @@
             <mat-expansion-panel>
                 <mat-expansion-panel-header>
                     <mat-panel-title>Waypoints</mat-panel-title>
+                    <mat-panel-description>{{ waypoints().length }}</mat-panel-description>
                 </mat-expansion-panel-header>
 
-                <div class="scroll">
-                    Waypoints here
+                <div class="cards scroll">
+                    @for (w of waypointList(); track w.symbol) {
+                        <app-waypoint-card [waypoint]="w" />
+                    } @empty {
+                        <p class="hint">Loading waypoints…</p>
+                    }
                 </div>
             </mat-expansion-panel>
         </mat-accordion>
