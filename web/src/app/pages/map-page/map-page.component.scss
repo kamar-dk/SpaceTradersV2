@@ -1,5 +1,6 @@
-$side-width: 420px;   // two compact cards side by side, plus the gap
+$side-width: 420px;                // two compact cards side by side, plus the gap
 $gap: 16px;
+$panel-max: calc(100vh - 260px);   // how tall an open panel's content may be; tune the 260px
 
 :host {
     display: flex;
@@ -20,7 +21,7 @@ nav {
 }
 
 app-system-map {
-    flex: 1;          // take all width the column doesn't use
+    flex: 1;                  // take all width the column doesn't use
     min-width: 0;
     height: 100%;
 }
@@ -29,7 +30,14 @@ app-system-map {
     flex: none;
     width: $side-width;
     min-width: 0;
+    overflow-y: auto;         // fallback only: if $panel-max is too big, the column scrolls instead of the page
+}
+
+// The content inside a panel: capped height, scrolls when it's taller
+.scroll {
+    max-height: $panel-max;
     overflow-y: auto;
+    padding-right: 4px;       // keep the scrollbar off the cards
 }
 
 .cards {
@@ -43,6 +51,7 @@ app-system-map {
     }
 }
 
+// Panel headers: muted colour when closed, full colour when open
 .side .mat-expansion-panel-header,
 .side .mat-expansion-panel-header:hover,
 .side .mat-expansion-panel-header:focus {
@@ -57,11 +66,6 @@ app-system-map {
     .mat-expansion-panel-header-title {
         color: var(--mat-sys-on-secondary-container);
     }
-}
-
-mat-paginator {
-    background: transparent;   // blend into the panel instead of a separate box
-    margin-top: 4px;
 }
 
 .hint {

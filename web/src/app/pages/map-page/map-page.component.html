@@ -19,29 +19,24 @@
                     <mat-panel-title>Ships in system</mat-panel-title>
                 </mat-expansion-panel-header>
 
-                <div class="cards">
-                    @for (ship of pagedShips(); track ship.symbol) {
+                <div class="cards scroll">
+                    @for (ship of ships(); track ship.symbol) {
                         <app-ship-card [ship]="ship" compact />
                     } @empty {
                         <p class="hint">No ships in this system.</p>
                     }
                 </div>
-
-                @if (ships().length > shipsPerPage) {
-                    <mat-paginator
-                        [length]="ships().length"
-                        [pageSize]="shipsPerPage"
-                        [pageIndex]="pageIndex()"
-                        (page)="onPage($event)"
-                        hidePageSize />
-                }
             </mat-expansion-panel>
-            <mat-expansion-panel hideToggle>
+
+            <mat-expansion-panel>
                 <mat-expansion-panel-header>
-                    <mat-panel-title>Waypoints in system</mat-panel-title>
+                    <mat-panel-title>Waypoints</mat-panel-title>
                 </mat-expansion-panel-header>
-                Waypoints here
-            </mat-expansion-panel>  
-        </mat-accordion>       
+
+                <div class="scroll">
+                    Waypoints here
+                </div>
+            </mat-expansion-panel>
+        </mat-accordion>
     </aside>
 </mat-tab-nav-panel>

@@ -1,36 +1,32 @@
-import { Component, computed, inject, input, linkedSignal } from "@angular/core";
+import { Component, computed, inject, input } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import { RouterLink } from "@angular/router";
 import { MatTabsModule } from "@angular/material/tabs";
 import { MatExpansionModule } from "@angular/material/expansion";
-import { MatAccordion } from "@angular/material/expansion";
 import { SystemMapComponent } from "../../system-map/system-map.component";
+import { ShipCardComponent } from "../../ship-card/ship-card.component";
 import { ApiService } from "../../services/api.service";
 import { ShipsService } from "../../services/ships.service";
 import { systemOf } from "../../utils/symbols";
-import { ShipCardComponent } from "../../ship-card/ship-card.component";
-import { MatPaginatorModule, type PageEvent } from "@angular/material/paginator";
 
 type SystemTab = { symbol: string; label: string; ships: number };
 
-const SHIPS_PER_PAGE = 6;
-
-
 @Component({
-  imports: [RouterLink, MatTabsModule, MatExpansionModule, SystemMapComponent, ShipCardComponent, MatAccordion, MatPaginatorModule],
-  selector: 'app-map-page',
-  styleUrl: './map-page.component.scss',
-  templateUrl: './map-page.component.html',
+    selector: "app-map-page",
+    imports: [RouterLink, MatTabsModule, MatExpansionModule, SystemMapComponent, ShipCardComponent],
+    templateUrl: "./map-page.component.html",
+    styleUrl: "./map-page.component.scss",
 })
 export class MapPageComponent {
-  private api = inject(ApiService);
-  private shipsService = inject(ShipsService);
+    private api = inject(ApiService);
+    private shipsService = inject(ShipsService);
 
-  system = input.required<string>(); // from :system in the URL
+    system = input.required<string>();   // from :system in the URL
 
-  private agent = toSignal(this.api.getAgent());
-  
-  tabs = computed<SystemTab[]>(() => {
+    private agent = toSignal(this.api.getAgent());
+
+    // One tab per system: HQ first, then every system where you have ships
+    tabs = computed<SystemTab[]>(() => {
         const agent = this.agent();
         const hq = agent ? systemOf(agent.headquarters) : undefined;
 
@@ -46,20 +42,6 @@ export class MapPageComponent {
         }));
     });
 
-  // Ships in the system being shown, for the side column
-  ships = computed(() => this.shipsService.inSystem(this.system()));
-
-  shipsPerPage = SHIPS_PER_PAGE;
-
-  pageIndex = linkedSignal({ source: this.system, computation: () => 0 });
-
-  // Only the ships on the current page
-  pagedShips = computed(() => {
-      const start = this.pageIndex() * SHIPS_PER_PAGE;
-      return this.ships().slice(start, start + SHIPS_PER_PAGE);
-  });
-
-  onPage(event: PageEvent): void {
-      this.pageIndex.set(event.pageIndex);
-  }
+    // Ships in the system being shown, for the side column
+    ships = computed(() => this.shipsService.inSystem(this.system()));
 }
