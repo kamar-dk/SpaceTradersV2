@@ -1,13 +1,13 @@
 import { Component, DestroyRef, computed, effect, inject, input, signal } from "@angular/core";
 import { toObservable, toSignal } from "@angular/core/rxjs-interop";
 import { switchMap } from "rxjs";
-import { ApiService } from "../services/api.service";
-import type { Waypoint } from "../models/waypoint";
-import { ShipsService } from "../services/ships.service";
+import { ApiService } from "../../services/api.service";
+import type { Waypoint } from "../../models/waypoint";
+import { ShipsService } from "../../services/ships.service";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
-import { AgentService } from "../services/agent.service";
-import { OTHER_STYLE, TYPE_STYLES, styleOf, type TypeStyle } from "../utils/waypoint-styles";
+import { AgentService } from "../../services/agent.service";
+import { OTHER_STYLE, TYPE_STYLES, styleOf, type TypeStyle } from "../../utils/waypoint-styles";
 
 // --- How each waypoint type looks ---
 

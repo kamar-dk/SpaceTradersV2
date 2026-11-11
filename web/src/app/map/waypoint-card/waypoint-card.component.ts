@@ -1,7 +1,7 @@
 import { Component, computed, input } from "@angular/core";
 import { MatCardModule } from "@angular/material/card";
-import { styleOf } from "../utils/waypoint-styles";
-import type { Waypoint, WaypointTraitSymbol } from "../models/waypoint";
+import { styleOf } from "../../utils/waypoint-styles";
+import type { Waypoint, WaypointTraitSymbol } from "../../models/waypoint";
 
 // The traits worth showing on a card, with short names. Everything else is left out.
 const KEY_TRAITS: Partial<Record<WaypointTraitSymbol, string>> = {

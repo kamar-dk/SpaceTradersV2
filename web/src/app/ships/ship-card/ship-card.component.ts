@@ -2,15 +2,15 @@ import { Component, booleanAttribute, computed, inject, input, signal } from "@a
 import { MatCardModule } from "@angular/material/card";
 import { MatIconModule } from "@angular/material/icon";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
-import { ClockService } from "../services/clock.service";
-import { formatDuration } from "../utils/time";
-import { AgentService } from "../services/agent.service";
-import type { Ship } from "../models/ship";
+import { ClockService } from "../../services/clock.service";
+import { formatDuration } from "../../utils/time";
+import { AgentService } from "../../services/agent.service";
+import type { Ship } from "../../models/ship";
 import { HttpErrorResponse } from "@angular/common/http";
 import { MatMenuModule } from "@angular/material/menu";
 import { MatButtonModule } from "@angular/material/button";
 import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
-import { ShipsService } from "../services/ships.service";
+import { ShipsService } from "../../services/ships.service";
 
 const STATUS_ICONS: Record<string, string> = {
     DOCKED: "anchor",

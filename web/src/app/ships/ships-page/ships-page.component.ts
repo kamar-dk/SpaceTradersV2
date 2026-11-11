@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { inject } from '@angular/core';
 import { ShipsService } from '../../services/ships.service';
-import { ShipCardComponent } from '../../ship-card/ship-card.component';
+import { ShipCardComponent } from '../ship-card/ship-card.component';
 
 @Component({
   imports: [ShipCardComponent],
