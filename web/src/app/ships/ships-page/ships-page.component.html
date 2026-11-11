@@ -1,6 +1,6 @@
 <h2>Ships</h2>
 <div class="grid">
     @for (ship of ships(); track ship.symbol) {
-        <app-ship-card [ship]="ship" />
+        <app-ship-card [ship]="ship" (click)="open(ship)" />
     }
 </div>

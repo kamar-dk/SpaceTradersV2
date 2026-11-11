@@ -11,12 +11,7 @@ import { MatMenuModule } from "@angular/material/menu";
 import { MatButtonModule } from "@angular/material/button";
 import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
 import { ShipsService } from "../../services/ships.service";
-
-const STATUS_ICONS: Record<string, string> = {
-    DOCKED: "anchor",
-    IN_ORBIT: "satellite_alt",
-    IN_TRANSIT: "rocket_launch",
-};
+import { statusIcon as iconFor } from "../ships-util";
 
 @Component({
     selector: "app-ship-card",
@@ -38,7 +33,7 @@ export class ShipCardComponent {
 
   name = computed(() => this.agentService.shipName(this.ship().symbol));
 
-  statusIcon = computed(() => STATUS_ICONS[this.ship().nav.status] ?? "help");
+  statusIcon = computed(() => iconFor(this.ship().nav.status));
 
   // "Docked at B7", "In orbit at B42", "→ B7 · 2m 05s"
   statusText = computed(() => {
