@@ -1,10 +1,10 @@
 import { Component, computed, input } from "@angular/core";
 import { MatCardModule } from "@angular/material/card";
 import { styleOf } from "../utils/waypoint-styles";
-import type { Waypoint } from "../models/waypoint";
+import type { Waypoint, WaypointTraitSymbol } from "../models/waypoint";
 
 // The traits worth showing on a card, with short names. Everything else is left out.
-const KEY_TRAITS: Record<string, string> = {
+const KEY_TRAITS: Partial<Record<WaypointTraitSymbol, string>> = {
     MARKETPLACE: "Market",
     SHIPYARD: "Shipyard",
     COMMON_METAL_DEPOSITS: "Common metals",
@@ -32,7 +32,7 @@ export class WaypointCardComponent {
     // Only the key traits, in the order of KEY_TRAITS
     tags = computed(() => {
         const has = new Set(this.waypoint().traits.map((t) => t.symbol));
-        return Object.entries(KEY_TRAITS)
+        return (Object.entries(KEY_TRAITS) as [WaypointTraitSymbol, string][])
             .filter(([symbol]) => has.has(symbol))
             .map(([symbol, label]) => ({ symbol, label }));
     });

@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from "@angular/core";
+import { Component, computed, inject, input, effect } from "@angular/core";
 import { toObservable, toSignal } from "@angular/core/rxjs-interop";
 import { RouterLink } from "@angular/router";
 import { switchMap } from "rxjs";
@@ -11,6 +11,7 @@ import { ApiService } from "../../services/api.service";
 import { ShipsService } from "../../services/ships.service";
 import { systemOf } from "../../utils/symbols";
 import { TYPE_STYLES } from "../../utils/waypoint-styles";
+import { WaypointsService } from "../../services/waypoints.service";
 
 type SystemTab = { symbol: string; label: string; ships: number };
 
@@ -33,6 +34,7 @@ const TYPE_ORDER = Object.keys(TYPE_STYLES);
 export class MapPageComponent {
     private api = inject(ApiService);
     private shipsService = inject(ShipsService);
+    private waypointsService = inject(WaypointsService)
 
     system = input.required<string>();   // from :system in the URL
 
@@ -59,10 +61,7 @@ export class MapPageComponent {
     ships = computed(() => this.shipsService.inSystem(this.system()));
 
     // Waypoints in the system being shown (the server caches them, so the map's request is instant)
-    waypoints = toSignal(
-        toObservable(this.system).pipe(switchMap((s) => this.api.getWaypoints(s))),
-        { initialValue: [] },
-    );
+    waypoints = computed(() => this.waypointsService.inSystem(this.system()));
 
     // Grouped by type in legend order, then by name
     waypointList = computed(() =>
@@ -73,4 +72,9 @@ export class MapPageComponent {
             return byType || a.symbol.localeCompare(b.symbol);
         }),
     );
+
+    constructor() {
+        // Make sure the cache has the system that's showing; does nothing if it's already there
+        effect(() => this.waypointsService.load(this.system()));
+    }
 }
