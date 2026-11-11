@@ -6,6 +6,7 @@ import type { Waypoint } from "../models/waypoint";
 import { ShipsService } from "../services/ships.service";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
+import { AgentService } from "../services/agent.service";
 import { OTHER_STYLE, TYPE_STYLES, styleOf, type TypeStyle } from "../utils/waypoint-styles";
 
 // --- How each waypoint type looks ---
@@ -36,6 +37,7 @@ type ShipMarker = {
 export class SystemMapComponent {
     private api = inject(ApiService);
     private shipsService = inject(ShipsService);
+    private agentService = inject(AgentService);
 
     system = input.required<string>();   // from :system in the URL
 
@@ -47,6 +49,7 @@ export class SystemMapComponent {
     );
 
     ships = computed(() => this.shipsService.inSystem(this.system()));
+    shipPrefix = inject(AgentService).prefix;
 
     // Ticks every second, so ships in transit move smoothly between refreshes
     private now = signal(Date.now());

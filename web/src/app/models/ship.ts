@@ -1,52 +1,7 @@
-export interface ShipRoute {
-    origin: { symbol: string };
-    destination: { symbol: string };
-    departureTime: string;
-    arrival: string;
-}
+import type { components } from "./api-types";
 
-export interface ShipNav {
-    systemSymbol: string;
-    waypointSymbol: string;
-    status: string;            // "DOCKED", "IN_ORBIT", "IN_TRANSIT"
-    route: ShipRoute;
-}
-
-export interface ShipFuel {
-    current: number;
-    capacity: number;
-}
-
-export interface ShipCargoItem {
-    symbol: string;
-    name: string;
-    units: number;
-}
-
-export interface ShipCargo {
-    capacity: number;
-    units: number;
-    inventory: ShipCargoItem[];
-}
-
-export interface ShipFrame {
-    symbol: string;
-    name: string;
-}
-
-export interface ShipMount {
-    symbol: string;
-    name: string;
-    strength?: number;
-    deposits?: string[];
-}
-
-export interface Ship {
-    symbol: string;
-    registration: { role: string };
-    nav: ShipNav;
-    fuel: ShipFuel;
-    cargo: ShipCargo;
-    frame: ShipFrame;
-    mounts: ShipMount[];
-}
+export type Ship = components["schemas"]["Ship"];
+export type ShipNav = components["schemas"]["ShipNav"];
+export type ShipFuel = components["schemas"]["ShipFuel"];
+export type ShipCargo = components["schemas"]["ShipCargo"];
+export type ShipMount = components["schemas"]["ShipMount"];

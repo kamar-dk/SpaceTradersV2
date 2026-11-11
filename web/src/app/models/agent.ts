@@ -1,7 +1,3 @@
-export interface Agent {
-    symbol: string;
-    headquarters: string;
-    credits: number;
-    shipCount: number;
-    startingFaction: string;
-}
+import type { components } from "./api-types";
+
+export type Agent = components["schemas"]["Agent"];

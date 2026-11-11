@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "generate:api": "npx -p typescript@5 -p openapi-typescript openapi-typescript https://raw.githubusercontent.com/SpaceTradersAPI/api-docs/main/reference/SpaceTraders.json -o src/app/models/api-types.ts"
   },
   "private": true,
   "packageManager": "npm@6.14.18",

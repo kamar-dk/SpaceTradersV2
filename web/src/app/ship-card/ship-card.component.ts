@@ -4,6 +4,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { ClockService } from "../services/clock.service";
 import { formatDuration } from "../utils/time";
+import { AgentService } from "../services/agent.service";
 import type { Ship } from "../models/ship";
 
 const STATUS_ICONS: Record<string, string> = {
@@ -20,12 +21,12 @@ const STATUS_ICONS: Record<string, string> = {
 })
 export class ShipCardComponent {
     private clock = inject(ClockService);
+    private agentService = inject(AgentService);
 
     ship = input.required<Ship>();
     compact = input(false, { transform: booleanAttribute });
 
-    // "SP0ILEDDADDY-1" → "S1"
-    name = computed(() => "S" + this.ship().symbol.split("-").pop());
+    name = computed(() => this.agentService.shipName(this.ship().symbol));
 
     statusIcon = computed(() => STATUS_ICONS[this.ship().nav.status] ?? "help");
 

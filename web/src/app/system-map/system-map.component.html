@@ -68,7 +68,7 @@
             <text class="ship-label"
                   [attr.x]="s.x" [attr.y]="s.y - unit() * 3"
                   [attr.font-size]="textSize()" [attr.stroke-width]="textSize() * 0.3">
-                S{{ s.number }}
+                {{ shipPrefix() }}{{ s.number }}
             </text>
         }
     </svg>
