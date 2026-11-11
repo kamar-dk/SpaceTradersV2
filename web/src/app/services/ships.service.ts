@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from "@angular/core";
 import { takeUntilDestroyed, toSignal } from "@angular/core/rxjs-interop";
-import { catchError, EMPTY, switchMap, timer, map } from "rxjs";
+import { catchError, EMPTY, switchMap, timer, map, firstValueFrom } from "rxjs";
 import { ApiService } from "./api.service";
 import type { Ship, ApiShip } from "../models/ship";
 
@@ -40,6 +40,15 @@ export class ShipsService {
         return this.ships().filter((s) => s.nav.systemSymbol === system);
     }
 
+    async orbit(symbol: string): Promise<void> {
+        const { nav } = await firstValueFrom(this.api.orbit(symbol));
+        this.patch(symbol, { nav });
+    }
+
+    async dock(symbol: string): Promise<void> {
+        const { nav } = await firstValueFrom(this.api.dock(symbol));
+        this.patch(symbol, { nav });
+    }
 
     // --- Writing ---
 

@@ -2,6 +2,16 @@
     display: block;
 }
 
+mat-card {
+    position: relative;   // the menu button is placed relative to the card
+}
+
+.menu-button {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+}
+
 .status {
     display: flex;
     align-items: center;
