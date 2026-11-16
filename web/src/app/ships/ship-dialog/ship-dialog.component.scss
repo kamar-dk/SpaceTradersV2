@@ -21,3 +21,8 @@
     font-size: 13px;
     color: var(--mat-sys-on-surface-variant);
 }
+
+mat-dialog-content {
+    max-height: none;    // the table scrolls by itself, so the dialog content doesn't need to
+    overflow: visible;
+}

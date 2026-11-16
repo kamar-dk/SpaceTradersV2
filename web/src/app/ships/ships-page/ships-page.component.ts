@@ -20,6 +20,7 @@ export class ShipsPageComponent {
       this.dialog.open<ShipDialogComponent, ShipDialogData>(ShipDialogComponent, {
           data: {ship: ship },
           width: "520px",
+          maxWidth: "90vw",
           autoFocus: false,
       });
   }

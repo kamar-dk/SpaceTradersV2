@@ -89,8 +89,7 @@ export class MapPageComponent {
     openTradeMatrix(): void {
         this.dialog.open<TradeMatrixDialogComponent, TradeMatrixDialogData>(TradeMatrixDialogComponent, {
             data: { system: this.system() },
-            width: "90vw",
-            maxWidth: "1200px",
+            maxWidth: "90vw",
             autoFocus: false,
         });
     }

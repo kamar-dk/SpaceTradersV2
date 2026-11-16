@@ -1,0 +1,53 @@
+<div class="toolbar">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Filter goods</mat-label>
+        <input matInput #q [value]="filter()" (input)="filter.set(q.value)" placeholder="ore" />
+    </mat-form-field>
+
+    <div class="legend">
+        <span class="import">▼ buys (sell here)</span>
+        <span class="export">▲ sells (buy here)</span>
+        <span class="exchange">⇄ both</span>
+    </div>
+</div>
+
+@if (!loaded()) {
+    <div class="loading">
+        <mat-spinner diameter="28" />
+        <span>Loading markets… the first time takes a few seconds.</span>
+    </div>
+} @else {
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th class="good">Good</th>
+                    @for (m of columns(); track m.symbol) {
+                        <th [title]="m.symbol">{{ short(m.symbol) }}</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (row of rows(); track row.symbol) {
+                    <tr>
+                        <th class="good" [title]="row.symbol">{{ row.name }}</th>
+                        @for (cell of row.cells; track $index) {
+                            @if (cell) {
+                                <td [class]="cell.kind" [title]="kindTitle(cell.kind)">
+                                    {{ kindSymbol(cell.kind) }}
+                                    @if (cell.price) {
+                                        <span class="price">{{ cell.price }}</span>
+                                    }
+                                </td>
+                            } @else {
+                                <td></td>
+                            }
+                        }
+                    </tr>
+                } @empty {
+                    <tr><td class="empty" [attr.colspan]="columns().length + 1">No goods match the filter.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
