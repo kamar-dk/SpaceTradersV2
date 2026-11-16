@@ -5,6 +5,7 @@ import type { Agent } from "../models/agent";
 import type { Waypoint } from "../models/waypoint";
 import type { ApiShip, ShipNav } from "../models/ship";
 import type { Market } from "../models/market";
+import type { Shipyard } from "../models/shipyard";
 
 @Injectable({ providedIn: "root" })
 export class ApiService {
@@ -32,5 +33,9 @@ export class ApiService {
 
     getMarkets(system: string): Observable<Market[]> {
         return this.http.get<Market[]>("/api/markets", { params: { system } });
+    }
+
+    getShipyards(system: string): Observable<Shipyard[]> {
+        return this.http.get<Shipyard[]>("/api/shipyards", { params: { system } });
     }
 }

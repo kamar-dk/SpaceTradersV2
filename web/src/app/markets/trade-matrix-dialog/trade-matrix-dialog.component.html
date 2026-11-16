@@ -1,7 +1,16 @@
-<h2 mat-dialog-title>Trade matrix · {{ data.system }}</h2>
+<h2 mat-dialog-title>{{ data.system }}</h2>
 
 <mat-dialog-content>
-    <app-trade-matrix [system]="data.system" />
+    <mat-tab-group animationDuration="0ms">
+        <mat-tab label="Trade">
+            <app-trade-matrix [system]="data.system" />
+        </mat-tab>
+        <mat-tab label="Shipyards">
+            <ng-template matTabContent>
+                <app-shipyard-matrix [system]="data.system" />
+            </ng-template>
+        </mat-tab>
+    </mat-tab-group>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

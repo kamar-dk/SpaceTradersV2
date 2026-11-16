@@ -1,0 +1,115 @@
+$import: #ffb74d;     // orange: they buy, you sell
+$export: #81c784;     // green: they sell, you buy
+$exchange: #9e9e9e;   // grey: both ways
+
+:host {
+    display: block;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+
+    mat-form-field {
+        width: 220px;
+    }
+}
+
+.legend {
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+
+    .import { color: $import; }
+    .export { color: $export; }
+    .exchange { color: $exchange; }
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 0;
+    color: var(--mat-sys-on-surface-variant);
+}
+
+// Scrolls both ways; the header row and the good column stay put
+.table-wrap {
+    max-height: 65vh;
+    overflow: auto;
+    border-radius: 8px;
+}
+
+table {
+    border-collapse: separate;   // needed for sticky cells to keep their borders
+    border-spacing: 0;
+    font-size: 13px;
+}
+
+th,
+td {
+    padding: 4px 8px;
+    text-align: center;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--mat-sys-surface-container-high);
+}
+
+th.good {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    text-align: left;
+    background: var(--mat-sys-surface-container-high);
+}
+
+thead th.good {
+    z-index: 2;   // the top-left corner sits above both sticky lines
+}
+
+tbody tr:hover td,
+tbody tr:hover th {
+    background-color: var(--mat-sys-surface-container-highest);
+}
+
+td {
+    min-width: 44px;
+
+    &.import {
+        color: $import;
+        background: color-mix(in srgb, $import 15%, transparent);
+    }
+
+    &.export {
+        color: $export;
+        background: color-mix(in srgb, $export 15%, transparent);
+    }
+
+    &.exchange {
+        color: $exchange;
+    }
+}
+
+.price {
+    margin-left: 4px;
+    font-size: 11px;
+}
+
+.empty {
+    padding: 16px;
+    color: var(--mat-sys-on-surface-variant);
+}
+
+td.offered {
+    color: #81c784;
+    background: color-mix(in srgb, #81c784 15%, transparent);
+}

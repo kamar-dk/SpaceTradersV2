@@ -1,0 +1,40 @@
+@if (!loaded()) {
+    <div class="loading">
+        <mat-spinner diameter="28" />
+        <span>Loading shipyards…</span>
+    </div>
+} @else if (columns().length === 0) {
+    <p class="empty">No shipyards in this system.</p>
+} @else {
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th class="good">Ship</th>
+                    @for (y of columns(); track y.symbol) {
+                        <th [title]="y.symbol">{{ short(y.symbol) }}</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (row of rows(); track row.type) {
+                    <tr>
+                        <th class="good" [title]="row.type">{{ row.name }}</th>
+                        @for (cell of row.cells; track $index) {
+                            @if (cell) {
+                                <td class="offered">
+                                    ✓
+                                    @if (cell.price) {
+                                        <span class="price">{{ cell.price.toLocaleString() }}</span>
+                                    }
+                                </td>
+                            } @else {
+                                <td></td>
+                            }
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
