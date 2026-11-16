@@ -5,6 +5,8 @@ import { listShips } from "../core/ships.ts";
 import { listWaypoints } from "../core/systems.ts";
 import { dock, orbit } from "../core/navigation.ts";
 import type { Waypoint } from "../core/types.ts";
+import type { Market } from "../core/types.ts";
+import { getMarket } from "../core/market.ts";
 
 const PORT = 3000;
 
@@ -13,6 +15,7 @@ const PORT = 3000;
 // Waypoints almost never change, so each system is fetched once and kept in memory.
 // Restart the server to clear it.
 const waypointCache = new Map<string, Waypoint[]>();
+const marketCache = new Map<String, Market[]>();
 
 async function getWaypointsCached(system: string): Promise<Waypoint[]> {
     let list = waypointCache.get(system);
@@ -44,6 +47,11 @@ const routes: Record<string, Handler> = {
         if (!system) throw new ApiError(400, "Missing ?system=");
         return getWaypointsCached(system);
     },
+    "/api/markets": (params) => {
+        const system = params.get("system");
+        if (!system) throw new ApiError(400, "Missing ?system=");
+        return getMarketsCached(system);
+    }
 };
 
 // --- Routes: actions (POST) ---
@@ -98,3 +106,22 @@ const server = createServer(async (req, res) => {
 server.listen(PORT, "127.0.0.1", () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+
+// Which goods each market trades rarely changes, so each system's markets are fetched once.
+// Prices aren't cached here; they only come with a ship present anyway.
+
+async function getMarketsCached(system: string): Promise<Market[]> {
+    let markets = marketCache.get(system);
+    if (!markets) {
+        const waypoints = await getWaypointsCached(system);
+        const withMarket = waypoints.filter((w) => w.traits.some((t) => t.symbol === "MARKETPLACE"));
+
+        // One at a time, to stay within the API's rate limit
+        markets = [];
+        for (const w of withMarket) {
+            markets.push(await getMarket(w.symbol));
+        }
+        marketCache.set(system, markets);
+    }
+    return markets;
+}

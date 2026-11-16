@@ -3,7 +3,8 @@ import { HttpClient } from "@angular/common/http";
 import type { Observable } from "rxjs";
 import type { Agent } from "../models/agent";
 import type { Waypoint } from "../models/waypoint";
-import type { Ship, ApiShip, ShipNav } from "../models/ship";
+import type { ApiShip, ShipNav } from "../models/ship";
+import type { Market } from "../models/market";
 
 @Injectable({ providedIn: "root" })
 export class ApiService {
@@ -27,5 +28,9 @@ export class ApiService {
 
     dock(ship: string): Observable<{ nav: ShipNav }> {
         return this.http.post<{ nav: ShipNav }>(`/api/ships/${ship}/dock`, null);
+    }
+
+    getMarkets(system: string): Observable<Market[]> {
+        return this.http.get<Market[]>("/api/markets", { params: { system } });
     }
 }

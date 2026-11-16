@@ -5,9 +5,23 @@
             @if (tab.ships) {
                 <span class="count">{{ tab.ships }}</span>
             }
+            @if (tab.symbol === system()) {
+                <button mat-icon-button class="tab-menu" aria-label="System actions"
+                        [matMenuTriggerFor]="systemMenu"
+                        (click)="$event.preventDefault(); $event.stopPropagation()">
+                    <mat-icon>more_vert</mat-icon>
+                </button>
+            }
         </a>
     }
 </nav>
+
+<mat-menu #systemMenu="matMenu">
+    <button mat-menu-item (click)="openTradeMatrix()">
+        <mat-icon>swap_horiz</mat-icon>
+        <span>Trade matrix</span>
+    </button>
+</mat-menu>
 
 <mat-tab-nav-panel #panel class="content">
     <app-system-map [system]="system()" />

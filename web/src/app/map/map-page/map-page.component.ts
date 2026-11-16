@@ -1,9 +1,9 @@
 import { Component, computed, inject, input, effect } from "@angular/core";
-import { toObservable, toSignal } from "@angular/core/rxjs-interop";
+import { toSignal } from "@angular/core/rxjs-interop";
 import { RouterLink } from "@angular/router";
-import { switchMap } from "rxjs";
 import { MatTabsModule } from "@angular/material/tabs";
 import { MatExpansionModule } from "@angular/material/expansion";
+import { MatDialog } from "@angular/material/dialog";
 import { SystemMapComponent } from "../system-map/system-map.component";
 import { ShipCardComponent } from "../../ships/ship-card/ship-card.component";
 import { WaypointCardComponent } from "../waypoint-card/waypoint-card.component";
@@ -12,6 +12,10 @@ import { ShipsService } from "../../services/ships.service";
 import { systemOf } from "../../utils/symbols";
 import { TYPE_STYLES } from "../../utils/waypoint-styles";
 import { WaypointsService } from "../../services/waypoints.service";
+import { TradeMatrixDialogComponent, type TradeMatrixDialogData } from "../../markets/trade-matrix-dialog/trade-matrix-dialog.component";
+import { MatMenuModule } from "@angular/material/menu";
+import { MatButtonModule } from "@angular/material/button";
+import { MatIconModule } from "@angular/material/icon";
 
 type SystemTab = { symbol: string; label: string; ships: number };
 
@@ -27,6 +31,9 @@ const TYPE_ORDER = Object.keys(TYPE_STYLES);
         SystemMapComponent,
         ShipCardComponent,
         WaypointCardComponent,
+        MatIconModule,
+        MatMenuModule,
+        MatButtonModule,
     ],
     templateUrl: "./map-page.component.html",
     styleUrl: "./map-page.component.scss",
@@ -35,6 +42,7 @@ export class MapPageComponent {
     private api = inject(ApiService);
     private shipsService = inject(ShipsService);
     private waypointsService = inject(WaypointsService)
+    private dialog = inject(MatDialog);
 
     system = input.required<string>();   // from :system in the URL
 
@@ -76,5 +84,14 @@ export class MapPageComponent {
     constructor() {
         // Make sure the cache has the system that's showing; does nothing if it's already there
         effect(() => this.waypointsService.load(this.system()));
+    }
+
+    openTradeMatrix(): void {
+        this.dialog.open<TradeMatrixDialogComponent, TradeMatrixDialogData>(TradeMatrixDialogComponent, {
+            data: { system: this.system() },
+            width: "90vw",
+            maxWidth: "1200px",
+            autoFocus: false,
+        });
     }
 }
