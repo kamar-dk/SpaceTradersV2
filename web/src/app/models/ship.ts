@@ -11,3 +11,4 @@ export type ShipFuel = components["schemas"]["ShipFuel"];
 export type ShipCargo = components["schemas"]["ShipCargo"];
 export type ShipMount = components["schemas"]["ShipMount"];
 export type ShipNavStatus = components["schemas"]["ShipNavStatus"];
+export type ShipModule = components["schemas"]["ShipModule"];

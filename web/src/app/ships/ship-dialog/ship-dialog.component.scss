@@ -1,3 +1,92 @@
+@use "@angular/material" as mat;
+
+// --- Title ---
+
+// The smaller text after the ship name: role · frame · full symbol
+.sub {
+    margin-left: 8px;
+    font-size: 13px;
+    font-weight: normal;
+    color: var(--mat-sys-on-surface-variant);
+}
+
+// --- Layout ---
+
+// Sections side by side when there's room, stacked when there isn't
+mat-dialog-content {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+        "nav     fuel     hull"
+        "mounts  modules  hull";
+    gap: 16px 24px;
+    align-items: start;
+}
+
+.nav {
+    grid-area: nav;
+}
+
+.fuel {
+    grid-area: fuel;
+}
+
+.hull {
+    grid-area: hull;
+}
+
+.mounts {
+    grid-area: mounts;
+}
+
+.modules {
+    grid-area: modules;
+}
+
+@media (max-width: 900px) {
+    mat-dialog-content {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "nav"
+            "cargo"
+            "mounts"
+            "modules"
+            "hull";
+    }
+}
+
+section h3 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: var(--mat-sys-primary);
+}
+
+section h4 {
+    margin: 12px 0 6px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mat-sys-on-surface-variant);
+}
+
+// --- Navigation: label | value ---
+
+dl {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 2px 12px;
+    margin: 0;
+}
+
+dt {
+    color: var(--mat-sys-on-surface-variant);
+}
+
+dd {
+    margin: 0;
+}
+
 .status {
     display: flex;
     align-items: center;
@@ -11,10 +100,11 @@
     }
 }
 
-// Label | bar | numbers, lined up in columns
+// --- Fuel & cargo: label | bar | numbers ---
+
 .meter {
     display: grid;
-    grid-template-columns: 44px 1fr auto;
+    grid-template-columns: 50px 1fr auto;
     align-items: center;
     gap: 8px;
     margin-bottom: 6px;
@@ -22,7 +112,112 @@
     color: var(--mat-sys-on-surface-variant);
 }
 
-mat-dialog-content {
-    max-height: none;    // the table scrolls by itself, so the dialog content doesn't need to
-    overflow: visible;
+.meter.wide {
+    grid-template-columns: 90px 1fr auto;
+}
+
+.meter.full {
+    @include mat.progress-bar-overrides((active-indicator-color: #ffb74d,
+        ));
+}
+
+.cargo {
+    width: 100%;
+    margin-top: 8px;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    td {
+        padding: 2px 0;
+    }
+
+    .num {
+        text-align: right;
+    }
+}
+
+// --- A list of ship parts: mounts, modules, etc. ---
+
+.parts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+        margin-bottom: 10px;
+    }
+}
+
+.part-name {
+    font-weight: 500;
+
+    .hint {
+        margin-left: 6px;
+        font-weight: normal;
+    }
+}
+
+.part-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--mat-sys-on-surface-variant);
+
+    span {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+    }
+
+    mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+    }
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;    // wraps onto new lines instead of one endless line
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.chip {
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    background: var(--mat-sys-surface-container-highest);
+}
+
+.with-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.badge {
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: normal;
+
+    &.cooling {
+        background: color-mix(in srgb, #ffb74d 20%, transparent);
+        color: #ffb74d;
+    }
+
+    &.ready {
+        background: color-mix(in srgb, #81c784 20%, transparent);
+        color: #81c784;
+    }
+}
+
+// --- Shared ---
+
+.hint {
+    font-size: 12px;
+    color: var(--mat-sys-on-surface-variant);
 }

@@ -1,47 +1,201 @@
-<p>{{ ship.symbol }}</p>
-<p>{{ ship.registration.role }} · {{ ship.frame.name }}</p>
+@if (ship(); as s) {
+    <h2 mat-dialog-title>
+        {{ shipName(s.symbol) }}
+        <span class="sub">{{ s.registration.role }} · {{ s.frame.name }} · {{ s.symbol }}</span>
+    </h2>
 
-<div class="status">
-    <mat-icon>{{ statusIcon() }}</mat-icon>
-    <span>{{ statusText() }}</span>
-</div>
+    <mat-dialog-content>
+        <section class="nav">
+            <h3>Navigation</h3>
+            <dl>
+                <dt>Status</dt><dd>{{ s.nav.status }}</dd>
+                <dt>Location</dt><dd>{{ s.nav.waypointSymbol }}</dd>
+                <dt>Flight Mode</dt><dd>{{ s.nav.flightMode }}</dd>
+                @if (s.nav.status === "IN_TRANSIT") {
+                    <dt>Route</dt>
+                    <dd>{{ short(s.nav.route.origin.symbol) }} → {{ short(s.nav.route.destination.symbol) }}</dd>
+                    <dt>Arrives</dt>
+                    <dd>{{ s.nav.route.arrival | date: "HH:mm:ss" }}</dd>
+                }
+            </dl>
+        </section>
 
-@if (ship.fuel.capacity > 0) {
-    <div class="meter">
-        <span>Fuel</span>
-        <mat-progress-bar mode="determinate" [value]="fuelPercent()" />
-        <span>{{ ship.fuel.current }}/{{ ship.fuel.capacity }}</span>
-    </div>
-}
-
-@if (ship.cargo.capacity > 0) {
-    <div class="meter">
-        <span>Cargo</span>
-        <mat-progress-bar mode="determinate" [value]="cargoPercent()" />
-        <span>{{ ship.cargo.units }}/{{ ship.cargo.capacity }}</span>
-    </div>
-}
-
-@if (ship.cargo.inventory.length) {
-    <h4>Cargo</h4>
-    <ul>
-        @for (item of ship.cargo.inventory; track item.symbol) {
-            <li>{{ item.units }}× {{ item.name }}</li>
-        }
-    </ul>
-}
-
-@if (ship.mounts.length) {
-    <h4>Mounts</h4>
-    <ul>
-        @for (mount of ship.mounts; track $index) {
-            <li>{{ mount.name }}</li>
-            @if (mount.deposits) {
-                <ul>
-                    <li>{{ mount.deposits }}</li>
-                </ul>
-                
+        <section class="fuel">
+            <h3>Fuel &amp; Cargo</h3>
+            @if (s.fuel.capacity > 0) {
+                <div class="meter">
+                    <span>Fuel</span>
+                    <mat-progress-bar mode="determinate" [value]="percent(s.fuel.current, s.fuel.capacity)" />
+                    <span>{{ s.fuel.current }}/{{ s.fuel.capacity }}</span>
+                </div>
             }
+            <div class="meter">
+                <span>Cargo</span>
+                <mat-progress-bar mode="determinate" [value]="percent(s.cargo.units, s.cargo.capacity)" />
+                <span>{{ s.cargo.units }}/{{ s.cargo.capacity }}</span>
+            </div>
+
+            @if (s.cargo.inventory.length) {
+                <table class="cargo">
+                    @for (item of s.cargo.inventory; track item.symbol) {
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td class="num">{{ item.units }}</td>
+                        </tr>
+                    }
+                </table>
+            } @else if (s.cargo.capacity > 0) {
+                <p class="hint">Cargo hold is empty.</p>
+            }
+        </section>
+
+        <section class="hull">
+            <h3>Hull &amp; Power</h3>
+            <h4>Capacity</h4>
+            <div class="meter wide" [class.full]="slotsUsed() >= s.frame.moduleSlots">
+                <span>Module Slots</span>
+                <mat-progress-bar mode="determinate" [value]="percent(slotsUsed(), s.frame.moduleSlots)" />
+                <span>{{ slotsUsed() }}/{{ s.frame.moduleSlots }}</span>
+            </div>
+            <div class="meter wide" [class.full]="s.mounts.length >= s.frame.mountingPoints">
+                <span>Mount Slots</span>
+                <mat-progress-bar mode="determinate" [value]="percent(s.mounts.length, s.frame.mountingPoints)" />
+                <span>{{ s.mounts.length }}/{{ s.frame.mountingPoints }}</span>
+            </div>
+            <div class="meter wide" [class.full]="powerUsed() >= s.reactor.powerOutput">
+                <span>Power</span>
+                <mat-progress-bar mode="determinate" [value]="percent(powerUsed(), s.reactor.powerOutput)" />
+                <span>{{ powerUsed() }}/{{ s.reactor.powerOutput }}</span>
+            </div>
+            <h4>Crew</h4>
+            <div class="meter wide">
+                <span>Aboard</span>
+                <mat-progress-bar mode="determinate" [value]="percent(s.crew.current, s.crew.capacity)" />
+                <span>{{ s.crew.current }}/{{ s.crew.capacity }}</span>
+            </div>
+            <div class="meter wide">
+                <span>Morale</span>
+                <mat-progress-bar mode="determinate" [value]="s.crew.morale" />
+                <span>{{ s.crew.morale }}%</span>
+            </div>
+            <div class="part-stats">
+                <span title="Minimum crew to operate">needs {{ s.crew.required }}</span>
+                <span>{{ prettyName(s.crew.rotation) }} rotation</span>
+                <span>{{ s.crew.wages ? s.crew.wages + " cr/h" : "no wages" }}</span>
+            </div>
+
+            <h4>Components</h4>
+            <ul class="parts">
+                @for (c of components(); track c.kind) {
+                @let level = conditionLevel(c.part.condition);
+                <li>
+                    <div class="part-name" [title]="c.part.description ?? ''">
+                        {{ c.part.name }}
+                        <span class="hint">{{ c.kind }} · Q{{ c.part.quality }}</span>
+                    </div>
+            
+                    <div class="part-stats">
+                        <span>{{ c.stat }}</span>
+                        <span title="Power needed"><mat-icon>bolt</mat-icon>{{ c.part.requirements.power ?? 0 }}</span>
+                        <span title="Crew needed"><mat-icon>person</mat-icon>{{ c.part.requirements.crew ?? 0 }}</span>
+                    </div>
+            
+                    <div class="meter wide thin condition" [class.worn]="level === 'worn'" [class.bad]="level === 'bad'">
+                        <span>Condition</span>
+                        <mat-progress-bar mode="determinate" [value]="c.part.condition * 100" />
+                        <span>{{ (c.part.condition * 100).toFixed(0) }}%</span>
+                    </div>
+            
+                    <div class="meter wide thin integrity">
+                        <span>Integrity</span>
+                        <mat-progress-bar mode="determinate" [value]="c.part.integrity * 100" />
+                        <span>{{ (c.part.integrity * 100).toFixed(0) }}%</span>
+                    </div>
+                </li>
+                }
+            </ul>
+        </section>
+
+        @if (s.mounts.length) {
+        <section class="mounts">
+            <h3 class="with-badge">
+                Mounts
+                @if (cooldownLeft() > 0) {
+                <span class="badge cooling">⏱ {{ formatDuration(cooldownLeft()) }}</span>
+                } @else {
+                <span class="badge ready">Ready</span>
+                }
+            </h3>
+            <ul class="parts">
+                @for (group of mountGroups(); track group.mount.symbol) {
+                @let m = group.mount;
+                <li>
+                    <div class="part-name" [title]="m.description ?? ''">
+                        {{ m.name }}
+                        @if (group.count > 1) {
+                        <span class="hint">×{{ group.count }}</span>
+                        }
+                    </div>
+                    <div class="part-stats">
+                        @if (m.strength) {
+                        <span title="Strength">strength {{ m.strength }}</span>
+                        }
+                        <span title="Power needed"><mat-icon>bolt</mat-icon>{{ m.requirements.power ?? 0 }}</span>
+                        <span title="Crew needed"><mat-icon>person</mat-icon>{{ m.requirements.crew ?? 0 }}</span>
+                    </div>
+                    @if (m.deposits?.length) {
+                    <div class="chips">
+                        @for (d of m.deposits; track d) {
+                        <span class="chip">{{ prettyName(d) }}</span>
+                        }
+                    </div>
+                    }
+                </li>
+                }
+            </ul>
+        </section>
         }
-    </ul>
+        
+        @if (s.modules.length) {
+            <section class="modules">
+                <h3>Modules</h3>
+                <ul class="parts">
+                    @for (group of moduleGroups(); track group.module.symbol) {
+                    @let m = group.module;
+                    <li>
+                        <div class="part-name" [title]="m.description ?? ''">
+                            {{ m.name }}
+                            @if (group.count > 1) {
+                            <span class="hint">×{{ group.count }}</span>
+                            }
+                        </div>
+                        <div class="part-stats">
+                            @if (m.capacity) {
+                            <span title="Capacity">capacity {{ m.capacity }}</span>
+                            }
+                            <span title="Power needed"><mat-icon>bolt</mat-icon>{{ m.requirements.power ?? 0 }}</span>
+                            <span title="Crew needed"><mat-icon>person</mat-icon>{{ m.requirements.crew ?? 0 }}</span>
+                            <span title="Module slots used"><mat-icon>view_module</mat-icon>{{ m.requirements.slots ?? 0 }}</span>
+                        </div>
+                    </li>
+                    }
+                </ul>
+            </section>
+        } 
+    </mat-dialog-content>
+} @else {
+    <mat-dialog-content>
+        <p class="hint">Ship not found.</p>
+    </mat-dialog-content>
 }
+
+<mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>
+
+<!--
+Condition (s.frame.condition, s.reactor.condition, s.engine.condition, between 0 and 1): small bars. Ships wear down, and this tells you when repairs are due.
+Crew (s.crew.current/capacity, morale).
+Actions: the Dock/Orbit buttons from the card menu, and later Refuel and Navigate, in the dialog’s actions row.
+
+-->
