@@ -43,4 +43,29 @@ export const miningCommands = {
             },
         });
     },
+
+    async siphon([ship, ...keep]: string[]) {
+        if (!ship) return console.log("Usage: st siphonUntilFull <ship> [gases to keep...]");
+
+        let stopping = false;
+        process.once("SIGINT", () => {
+            console.log("\nStopping after this step... (Ctrl+C again to force quit)");
+            stopping = true;
+        });
+
+        await mining.mineUntilFull(ship, {
+            method: "siphon",
+            keep: keep.map((g) => g.toUpperCase()) as TradeSymbol[],
+            wait: countdown,
+            shouldStop: () => stopping,
+            onEvent: (e) => {
+                if (e.type === "extracted") console.log(`Siphoned ${e.units} ${e.symbol}`);
+                if (e.type === "jettisoned") console.log(`Jettisoned ${e.units} ${e.symbol}`);
+                if (e.type === "full") {
+                    console.log("Cargo full, stopping.");
+                    for (const item of e.cargo.inventory) console.log(`  ${item.units}x ${item.symbol}`);
+                }
+            },
+        });
+    },
 };

@@ -22,3 +22,4 @@ export type ShipType = Schemas["ShipType"];
 export type ShipyardTransaction = Schemas["ShipyardTransaction"];
 export type Shipyard = Schemas["Shipyard"];
 export type Survey = Schemas["Survey"];
+export type Siphon = Schemas["Siphon"];

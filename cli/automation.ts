@@ -1,4 +1,5 @@
-import { runMiningLoop, runSurveyLoop, type AutoStats } from "../core/automation.ts";
+import { runMarketTour, runMiningLoop, runSurveyLoop, type AutoStats } from "../core/automation.ts";
+import type { MiningMethod } from "../core/mining.ts";
 import type { TradeSymbol } from "../core/types.ts";
 import { formatDuration } from "../utils.ts";
 import { countdown } from "./countdown.ts";
@@ -9,61 +10,71 @@ function printStats(s: AutoStats): void {
     console.log(`  Credits: ${s.credits.toLocaleString()} (started at ${s.startCredits.toLocaleString()})`);
 }
 
-export const automationCommands = {
-    async auto([ship, mineAt, sellAt, ...keep]: string[]) {
-        if (!ship || !mineAt || !sellAt) {
-            return console.log("Usage: st auto <ship> <mineWaypoint> <sellWaypoint> [goods to keep...]");
-        }
+// Shared by auto and autoSiphon: runs the mining loop and prints what happens
+async function runAuto(method: MiningMethod, [ship, mineAt, sellAt, ...keep]: string[], usage: string) {
+    if (!ship || !mineAt || !sellAt) return console.log(usage);
 
-        let stopping = false;
-        process.once("SIGINT", () => {
-            console.log("\nStopping after this step... (Ctrl+C again to force quit)");
-            stopping = true;
-        });
+    const verb = method === "siphon" ? "Siphoned" : "Extracted";
 
-        await runMiningLoop(ship, mineAt, sellAt, {
-            keep: keep.map((g) => g.toUpperCase()) as TradeSymbol[],
-            wait: countdown,
-            shouldStop: () => stopping,
-            onEvent: (e) => {
-                switch (e.type) {
-                    case "start":
-                        console.log(`Keeping: ${e.keep.join(", ")}`);
-                        break;
-                    case "trip":
-                        console.log(`\n=== Trip ${e.trip} ===`);
-                        break;
-                    case "departing":
-                        console.log(`Flying to ${e.destination}, ${formatDuration(e.seconds)} (fuel ${e.fuel.current}/${e.fuel.capacity})`);
-                        break;
-                    case "mining": {
-                        const m = e.event;
-                        const tag = (surveyed: boolean) => (surveyed ? " (surveyed)" : "");
-                        if (m.type === "extracted") console.log(`  Extracted ${m.units} ${m.symbol}${tag(m.surveyed)}`);
-                        if (m.type === "jettisoned") console.log(`  Jettisoned ${m.units} ${m.symbol}${tag(m.surveyed)}`);
-                        if (m.type === "full") console.log("  Cargo full");
-                        break;
-                    }
-                    case "sold":
-                        for (const t of e.transactions) console.log(`  Sold ${t.units} ${t.tradeSymbol} for ${t.totalPrice}`);
-                        break;
-                    case "sale-failed":
-                        console.log(`  Nothing sold (attempt ${e.attempt} of 3), retrying in ${e.retryIn}s`);
-                        break;
-                    case "refuel-failed":
-                        console.log(`  Could not refuel: ${e.message}`);
-                        break;
-                    case "trip-done":
-                        console.log(`  Trip: sold ${e.sold}, fuel -${e.fuel}, net ${e.sold - e.fuel}`);
-                        printStats(e.stats);
-                        break;
-                    case "stopped":
-                        console.log("\n=== Stopped ===");
-                        printStats(e.stats);
-                        break;
+    let stopping = false;
+    process.once("SIGINT", () => {
+        console.log("\nStopping after this step... (Ctrl+C again to force quit)");
+        stopping = true;
+    });
+
+    await runMiningLoop(ship, mineAt, sellAt, {
+        method,
+        keep: keep.map((g) => g.toUpperCase()) as TradeSymbol[],
+        wait: countdown,
+        shouldStop: () => stopping,
+        onEvent: (e) => {
+            switch (e.type) {
+                case "start":
+                    console.log(`Keeping: ${e.keep.join(", ")}`);
+                    break;
+                case "trip":
+                    console.log(`\n=== Trip ${e.trip} ===`);
+                    break;
+                case "departing":
+                    console.log(`Flying to ${e.destination}, ${formatDuration(e.seconds)} (fuel ${e.fuel.current}/${e.fuel.capacity})`);
+                    break;
+                case "mining": {
+                    const m = e.event;
+                    const tag = (surveyed: boolean) => (surveyed ? " (surveyed)" : "");
+                    if (m.type === "extracted") console.log(`  ${verb} ${m.units} ${m.symbol}${tag(m.surveyed)}`);
+                    if (m.type === "jettisoned") console.log(`  Jettisoned ${m.units} ${m.symbol}${tag(m.surveyed)}`);
+                    if (m.type === "full") console.log("  Cargo full");
+                    break;
                 }
-            },
-        });
+                case "sold":
+                    for (const t of e.transactions) console.log(`  Sold ${t.units} ${t.tradeSymbol} for ${t.totalPrice}`);
+                    break;
+                case "sale-failed":
+                    console.log(`  Nothing sold (attempt ${e.attempt} of 3), retrying in ${e.retryIn}s`);
+                    break;
+                case "refuel-failed":
+                    console.log(`  Could not refuel: ${e.message}`);
+                    break;
+                case "trip-done":
+                    console.log(`  Trip: sold ${e.sold}, fuel -${e.fuel}, net ${e.sold - e.fuel}`);
+                    printStats(e.stats);
+                    break;
+                case "stopped":
+                    console.log("\n=== Stopped ===");
+                    printStats(e.stats);
+                    break;
+            }
+        },
+    });
+}
+
+export const automationCommands = {
+    async auto(args: string[]) {
+        await runAuto("extract", args, "Usage: st auto <ship> <asteroid> <sellWaypoint> [goods to keep...]");
+    },
+
+    async autoSiphon(args: string[]) {
+        await runAuto("siphon", args, "Usage: st autoSiphon <ship> <gasGiant> <sellWaypoint> [gases to keep...]");
     },
 
     async autoSurvey([ship, waypoint, ...goods]: string[]) {
@@ -97,6 +108,46 @@ export const automationCommands = {
                         break;
                     case "stopped":
                         console.log(`\n=== Stopped after ${e.total} surveys ===`);
+                        break;
+                }
+            },
+        });
+    },
+
+    async scoutMarkets(args: string[]) {
+        const once = args.includes("--once");
+        const [ship] = args.filter((a) => a !== "--once");
+        if (!ship) return console.log("Usage: st scoutMarkets <ship> [--once]");
+
+        let stopping = false;
+        process.once("SIGINT", () => {
+            console.log("\nStopping after this stop... (Ctrl+C again to force quit)");
+            stopping = true;
+        });
+
+        await runMarketTour(ship, {
+            once,
+            wait: countdown,
+            shouldStop: () => stopping,
+            onEvent: (e) => {
+                switch (e.type) {
+                    case "start":
+                        console.log(`Touring ${e.stops.length} markets in ${e.system}: ${e.stops.map((s) => s.split("-").pop()).join(" → ")}`);
+                        break;
+                    case "departing":
+                        console.log(`Flying to ${e.destination}, ${formatDuration(e.seconds)}`);
+                        break;
+                    case "scanned":
+                        console.log(`  [${e.stop}/${e.of}] ${e.waypoint}: ${e.goods} prices saved`);
+                        break;
+                    case "scan-failed":
+                        console.log(`  ${e.waypoint}: scan failed (${e.message})`);
+                        break;
+                    case "lap-done":
+                        console.log(`\n=== Lap ${e.lap} done ===\n`);
+                        break;
+                    case "stopped":
+                        console.log(`\nStopped after ${e.scanned} scans`);
                         break;
                 }
             },

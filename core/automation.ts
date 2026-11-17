@@ -1,13 +1,14 @@
 import { ensureDocked, ensureOrbit, flyTo, refuel } from "./navigation.ts";
-import { mineUntilFull, type MiningEvent } from "./mining.ts";
+import { mineUntilFull, type MiningEvent, type MiningMethod } from "./mining.ts";
 import { getMarket, sellAll } from "./market.ts";
 import { getCargo } from "./cargo.ts";
 import { getAgent } from "./agent.ts";
 import { canSurvey, getCooldown, getShip } from "./ships.ts";
 import { scoreSurvey, survey } from "./surveying.ts";
 import { listSurveys } from "./surveyStore.ts";
-import { sleep } from "../utils.ts";
-import type { MarketTransaction, ShipFuel, TradeSymbol } from "./types.ts";
+import { listWaypoints } from "./systems.ts";
+import { sleep, systemOf } from "../utils.ts";
+import type { MarketTransaction, ShipFuel, TradeSymbol, Waypoint } from "./types.ts";
 
 const MAX_FAILED_SALES = 3;      // give up after this many empty sales in a row
 const SALE_RETRY_SECONDS = 15;   // wait this long between attempts
@@ -36,6 +37,7 @@ export type AutoEvent =
     | { type: "stopped"; stats: AutoStats };
 
 export type AutoOptions = {
+    method?: MiningMethod;                                 // "extract" (asteroids, default) or "siphon" (gas giants)
     keep?: TradeSymbol[];                                  // empty = everything the sell market buys
     onEvent?: (e: AutoEvent) => void;
     wait?: (seconds: number, label: string) => Promise<void>;
@@ -57,11 +59,11 @@ async function tryRefuel(ship: string, onEvent: (e: AutoEvent) => void): Promise
     }
 }
 
-// --- The loop ---
+// --- The mining loop ---
 
-// Mine at one waypoint, sell at another, repeat until shouldStop()
+// Mine (or siphon) at one waypoint, sell at another, repeat until shouldStop()
 export async function runMiningLoop(ship: string, mineAt: string, sellAt: string, options: AutoOptions = {}): Promise<void> {
-    const { onEvent = () => {}, wait = sleep, shouldStop = () => false } = options;
+    const { method = "extract", onEvent = () => { }, wait = sleep, shouldStop = () => false } = options;
 
     // 1. Decide what to keep: only goods the sell market actually buys
     const market = await getMarket(sellAt);
@@ -118,6 +120,7 @@ export async function runMiningLoop(ship: string, mineAt: string, sellAt: string
             await ensureOrbit(ship);
 
             const cargo = await mineUntilFull(ship, {
+                method,
                 keep,
                 wait,
                 shouldStop,
@@ -169,8 +172,8 @@ export type SurveyEvent =
 
 export type SurveyOptions = {
     keep?: TradeSymbol[];                                  // what the miners want; used to judge surveys
-    minSurveyScore?: number;                               // default 0.5, same as the miners
-    enoughGood?: number;                                   // pause while this many good surveys exist (default 3)
+    minSurveyScore?: number;                               // default 0.3, same as the miners
+    enoughGood?: number;                                   // pause while this many good surveys exist (default 5)
     onEvent?: (e: SurveyEvent) => void;
     wait?: (seconds: number, label: string) => Promise<void>;
     shouldStop?: () => boolean;
@@ -180,7 +183,7 @@ export type SurveyOptions = {
 export async function runSurveyLoop(ship: string, waypoint: string, options: SurveyOptions = {}): Promise<void> {
     const {
         keep = [], minSurveyScore = 0.3, enoughGood = 5,
-        onEvent = () => {}, wait = sleep, shouldStop = () => false,
+        onEvent = () => { }, wait = sleep, shouldStop = () => false,
     } = options;
 
     // 1. Check the ship can survey at all, before flying anywhere
@@ -221,4 +224,80 @@ export async function runSurveyLoop(ship: string, waypoint: string, options: Sur
     }
 
     onEvent({ type: "stopped", total });
+}
+
+// --- The market tour ---
+
+export type TourEvent =
+    | { type: "start"; system: string; stops: string[] }
+    | { type: "departing"; destination: string; fuel: ShipFuel; seconds: number }
+    | { type: "scanned"; waypoint: string; goods: number; stop: number; of: number }
+    | { type: "scan-failed"; waypoint: string; message: string }
+    | { type: "lap-done"; lap: number }
+    | { type: "stopped"; scanned: number };
+
+export type TourOptions = {
+    once?: boolean;                                   // stop after one round instead of repeating
+    onEvent?: (e: TourEvent) => void;
+    wait?: (seconds: number, label: string) => Promise<void>;
+    shouldStop?: () => boolean;
+};
+
+// Orders waypoints into a short route: always go to the nearest one not visited yet
+function planTour(from: { x: number; y: number }, waypoints: Waypoint[]): Waypoint[] {
+    const left = [...waypoints];
+    const route: Waypoint[] = [];
+    let here = from;
+
+    while (left.length > 0) {
+        let nearest = 0;
+        for (let i = 1; i < left.length; i++) {
+            const d = Math.hypot(left[i].x - here.x, left[i].y - here.y);
+            const best = Math.hypot(left[nearest].x - here.x, left[nearest].y - here.y);
+            if (d < best) nearest = i;
+        }
+        const [next] = left.splice(nearest, 1);
+        route.push(next);
+        here = next;
+    }
+    return route;
+}
+
+// Flies a ship around every marketplace in its system, saving live prices at each stop
+export async function runMarketTour(ship: string, options: TourOptions = {}): Promise<void> {
+    const { once = false, onEvent = () => { }, wait = sleep, shouldStop = () => false } = options;
+
+    const start = await getShip(ship);
+    const system = systemOf(start.nav.waypointSymbol);
+    const markets = await listWaypoints(system, "MARKETPLACE");
+    if (markets.length === 0) throw new Error(`No marketplaces in ${system}`);
+
+    // Start the route from wherever the ship is now
+    const here = markets.find((w) => w.symbol === start.nav.waypointSymbol) ?? { x: 0, y: 0 };
+    const route = planTour(here, markets);
+    onEvent({ type: "start", system, stops: route.map((w) => w.symbol) });
+
+    let scanned = 0;
+    for (let lap = 1; !shouldStop(); lap++) {
+        for (const [i, w] of route.entries()) {
+            if (shouldStop()) break;
+
+            await flyTo(ship, w.symbol, { wait, onDepart: (info) => onEvent({ type: "departing", ...info }) });
+
+            try {
+                const market = await getMarket(w.symbol);   // the ship is here, so this has live prices and saves them
+                scanned++;
+                onEvent({ type: "scanned", waypoint: w.symbol, goods: market.tradeGoods?.length ?? 0, stop: i + 1, of: route.length });
+            } catch (e) {
+                // One market failing shouldn't end the tour
+                onEvent({ type: "scan-failed", waypoint: w.symbol, message: e instanceof Error ? e.message : String(e) });
+            }
+        }
+
+        if (shouldStop()) break;
+        onEvent({ type: "lap-done", lap });
+        if (once) break;
+    }
+
+    onEvent({ type: "stopped", scanned });
 }
