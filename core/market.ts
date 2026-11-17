@@ -3,11 +3,13 @@ import { systemOf, sleep } from "../utils.ts";
 import { getCargo } from "./cargo.ts";
 import { listWaypoints } from "./systems.ts";
 import type { Market, TradeSymbol, Agent, ShipCargo, MarketTransaction } from "./types.ts";
+import { saveMarket } from "./marketStore.ts";
 
 type TradeResult = { agent: Agent; cargo: ShipCargo; transaction: MarketTransaction };
 
-export function getMarket(waypoint: string): Promise<Market> {
-    return api<Market>(`/systems/${systemOf(waypoint)}/waypoints/${waypoint}/market`);
+export async function getMarket(waypoint: string): Promise<Market> {
+    const market = await api<Market>(`/systems/${systemOf(waypoint)}/waypoints/${waypoint}/market`);
+    return saveMarket(market);
 }
 
 // Fetches the market and waits for live prices, which can lag slightly behind a ship's arrival.
