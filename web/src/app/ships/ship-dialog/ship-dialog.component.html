@@ -15,7 +15,14 @@
                     <dt>Route</dt>
                     <dd>{{ short(s.nav.route.origin.symbol) }} → {{ short(s.nav.route.destination.symbol) }}</dd>
                     <dt>Arrives</dt>
-                    <dd>{{ s.nav.route.arrival | date: "HH:mm:ss" }}</dd>
+                    <dd>
+                        {{ s.nav.route.arrival | date: "HH:mm:ss" }}
+                        @if (arrivalLeft() > 0) {
+                            <span class="hint">in {{ formatDuration(arrivalLeft()) }}</span>
+                        } @else {
+                            <span class="hint">arriving</span>
+                        }
+                    </dd>
                 }
             </dl>
         </section>
@@ -121,9 +128,9 @@
             <h3 class="with-badge">
                 Mounts
                 @if (cooldownLeft() > 0) {
-                <span class="badge cooling">⏱ {{ formatDuration(cooldownLeft()) }}</span>
+                    <span class="badge cooling">⏱ {{ formatDuration(cooldownLeft()) }}</span>
                 } @else {
-                <span class="badge ready">Ready</span>
+                    <span class="badge ready">Ready</span>
                 }
             </h3>
             <ul class="parts">

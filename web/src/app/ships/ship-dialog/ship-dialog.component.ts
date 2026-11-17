@@ -91,6 +91,12 @@ export class ShipDialogComponent {
         ];
     });
 
+    arrivalLeft = computed(() => {
+        const nav = this.ship().nav;
+        if (nav.status !== "IN_TRANSIT") return 0;
+        return Math.max(0, (new Date(nav.route.arrival).getTime() - this.clock.now()) / 1000);
+    });
+
     short(symbol: string): string {
         return symbol.split("-").pop() ?? symbol;
     }
